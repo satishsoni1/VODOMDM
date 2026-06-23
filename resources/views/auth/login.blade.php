@@ -322,7 +322,7 @@
                 </li>
                 <li>
                     <div class="feature-icon"><i class="bi bi-wifi"></i></div>
-                    <div><strong>Live MDM Sync</strong> — Headwind MDM device status & compliance</div>
+                    <div><strong>Live MDM Sync</strong> — VODO MDM device status & compliance</div>
                 </li>
                 <li>
                     <div class="feature-icon"><i class="bi bi-people-fill"></i></div>

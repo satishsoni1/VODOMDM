@@ -39,7 +39,7 @@
             </div>
             <div class="card-body">
                 <p class="text-muted small mb-3">
-                    Export device data from your Headwind MDM portal as CSV and upload here.
+                    Export device data from your VODO MDM portal as CSV and upload here.
                     The system will <strong>upsert</strong> (create new + update existing) records and
                     auto-match devices to employees by IMEI/Serial.
                 </p>

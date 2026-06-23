@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
 
             // ── MDM Portal identity ──────────────────────────────────────────
-            $table->string('mdm_number', 100)->unique();   // "number" in Headwind MDM
+            $table->string('mdm_number', 100)->unique();   // "number" in VODO MDM
             $table->string('imei', 50)->nullable()->index();
             $table->string('serial_number', 100)->nullable()->index();
             $table->string('phone', 20)->nullable();
