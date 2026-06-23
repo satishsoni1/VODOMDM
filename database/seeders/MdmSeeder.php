@@ -1,0 +1,260 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Employee;
+use App\Models\MdmImportLog;
+use App\Models\MdmPortalDevice;
+use App\Models\User;
+use Illuminate\Database\Seeder;
+
+class MdmSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $admin    = User::where('email', 'admin@assettrack.in')->first();
+        $employees = Employee::all()->keyBy('employee_code');
+
+        $devices = [
+            // From actual MDM export sample
+            [
+                'mdm_number'          => '1000089',
+                'serial_number'       => 'RZGL3083E0A',
+                'mdm_group'           => 'Zorvia',
+                'configuration'       => 'Zorvia',
+                'launcher_version'    => '6.29',
+                'device_status'       => 'off',
+                'permission_status'   => 'All permissions are granted',
+                'installation_status' => "- Headwind MDM: installed 6.29, available 6.25\n- Z Force: installed 1.4.3, available 1.4.4",
+                'sync_time'           => now()->subMinutes(4),
+                'model'               => 'SM-X230',
+                'default_launcher'    => 'com.hmdm.launcher',
+                'ip_address'          => '152.59.155.133',
+                'mdm_mode'            => true,
+                'kiosk_mode'          => false,
+                'enrollment_date'     => now()->subDays(69),
+                'android_version'     => '16',
+                'employee_code'       => 'EMP-ACME-001',
+            ],
+            [
+                'mdm_number'          => '1000487',
+                'serial_number'       => 'RZGL22AH0AX',
+                'mdm_group'           => 'Zorvia',
+                'configuration'       => 'Zorvia',
+                'launcher_version'    => '6.29',
+                'device_status'       => 'off',
+                'permission_status'   => 'All permissions are granted',
+                'installation_status' => "- Headwind MDM: installed 6.29, available 6.25",
+                'sync_time'           => now()->subMinutes(90),
+                'model'               => 'SM-X230',
+                'default_launcher'    => 'com.hmdm.launcher',
+                'ip_address'          => '223.237.151.16',
+                'mdm_mode'            => true,
+                'kiosk_mode'          => false,
+                'enrollment_date'     => now()->subDays(49),
+                'android_version'     => '16',
+                'employee_code'       => 'EMP-ACME-002',
+            ],
+            // Additional demo devices
+            [
+                'mdm_number'      => '1000112',
+                'serial_number'   => 'RZGL4401B3C',
+                'mdm_group'       => 'Zorvia',
+                'configuration'   => 'Zorvia',
+                'launcher_version'=> '6.29',
+                'device_status'   => 'on',
+                'permission_status'=> 'All permissions are granted',
+                'installation_status' => "- Headwind MDM: installed 6.29, available 6.29\n- Z Force: installed 1.4.4, available 1.4.4",
+                'sync_time'       => now()->subMinutes(12),
+                'model'           => 'SM-A145F',
+                'default_launcher'=> 'com.hmdm.launcher',
+                'ip_address'      => '103.24.67.18',
+                'mdm_mode'        => true,
+                'kiosk_mode'      => false,
+                'enrollment_date' => now()->subDays(33),
+                'android_version' => '14',
+                'latitude'        => 19.0760,
+                'longitude'       => 72.8777,
+                'location_raw'    => 'Mumbai, Maharashtra',
+                'employee_code'   => 'EMP-ACME-003',
+            ],
+            [
+                'mdm_number'      => '1000203',
+                'serial_number'   => 'R58N301KXYZ',
+                'imei'            => '358000001111111',
+                'mdm_group'       => 'Zorvia',
+                'configuration'   => 'Zorvia',
+                'launcher_version'=> '6.28',
+                'device_status'   => 'on',
+                'permission_status'=> 'All permissions are granted',
+                'installation_status' => "- Headwind MDM: installed 6.28, available 6.29\n- Z Force: installed 1.4.4, available 1.4.4",
+                'sync_time'       => now()->subMinutes(5),
+                'model'           => 'SM-A145F',
+                'default_launcher'=> 'com.hmdm.launcher',
+                'ip_address'      => '103.25.12.44',
+                'mdm_mode'        => true,
+                'kiosk_mode'      => true,
+                'enrollment_date' => now()->subDays(43),
+                'android_version' => '14',
+                'latitude'        => 28.6139,
+                'longitude'       => 77.2090,
+                'location_raw'    => 'Delhi',
+                'employee_code'   => 'EMP-ACME-004',
+            ],
+            [
+                'mdm_number'      => '1000312',
+                'serial_number'   => 'R9AH10023BD',
+                'mdm_group'       => 'Tata-West',
+                'configuration'   => 'SFA-Standard',
+                'launcher_version'=> '6.29',
+                'device_status'   => 'on',
+                'permission_status'=> 'All permissions are granted',
+                'installation_status' => "- Headwind MDM: installed 6.29, available 6.29\n- DMS App: installed 2.1.0, available 2.1.0",
+                'sync_time'       => now()->subMinutes(28),
+                'model'           => 'SM-A245F',
+                'default_launcher'=> 'com.hmdm.launcher',
+                'ip_address'      => '117.55.43.21',
+                'mdm_mode'        => true,
+                'kiosk_mode'      => false,
+                'enrollment_date' => now()->subDays(22),
+                'android_version' => '14',
+                'latitude'        => 18.5204,
+                'longitude'       => 73.8567,
+                'location_raw'    => 'Pune, Maharashtra',
+                'employee_code'   => 'EMP-TATA-001',
+            ],
+            [
+                'mdm_number'      => '1000398',
+                'serial_number'   => 'R9AH20045EF',
+                'mdm_group'       => 'Tata-West',
+                'configuration'   => 'SFA-Standard',
+                'launcher_version'=> '6.27',
+                'device_status'   => 'off',
+                'permission_status'=> 'Location permission not granted',
+                'installation_status' => "- Headwind MDM: installed 6.27, available 6.29\n- DMS App: installed 2.0.5, available 2.1.0",
+                'sync_time'       => now()->subHours(26),
+                'model'           => 'SM-A245F',
+                'default_launcher'=> 'com.hmdm.launcher',
+                'ip_address'      => '117.56.44.88',
+                'mdm_mode'        => true,
+                'kiosk_mode'      => false,
+                'enrollment_date' => now()->subDays(18),
+                'android_version' => '14',
+                'employee_code'   => 'EMP-TATA-002',
+            ],
+            [
+                'mdm_number'      => '1000445',
+                'serial_number'   => 'HUL10098GG1',
+                'mdm_group'       => 'HUL-South',
+                'configuration'   => 'Distributor-Config',
+                'launcher_version'=> '6.29',
+                'device_status'   => 'on',
+                'permission_status'=> 'All permissions are granted',
+                'installation_status' => "- Headwind MDM: installed 6.29, available 6.29\n- VAN App: installed 3.2.1, available 3.2.1",
+                'sync_time'       => now()->subMinutes(45),
+                'model'           => 'Nokia G42 5G',
+                'default_launcher'=> 'com.hmdm.launcher',
+                'ip_address'      => '49.36.77.12',
+                'mdm_mode'        => true,
+                'kiosk_mode'      => false,
+                'enrollment_date' => now()->subDays(15),
+                'android_version' => '13',
+                'latitude'        => 12.9716,
+                'longitude'       => 77.5946,
+                'location_raw'    => 'Bangalore, Karnataka',
+                'employee_code'   => 'EMP-HUL-001',
+            ],
+            [
+                'mdm_number'      => '1000521',
+                'serial_number'   => 'HUL20099HH2',
+                'mdm_group'       => 'HUL-South',
+                'configuration'   => 'Distributor-Config',
+                'launcher_version'=> '6.29',
+                'device_status'   => 'off',
+                'permission_status'=> 'All permissions are granted',
+                'installation_status' => "- Headwind MDM: installed 6.29, available 6.29\n- VAN App: installed 3.2.0, available 3.2.1",
+                'sync_time'       => now()->subDays(3),
+                'model'           => 'Nokia G42 5G',
+                'default_launcher'=> 'com.hmdm.launcher',
+                'ip_address'      => '49.37.88.23',
+                'mdm_mode'        => true,
+                'kiosk_mode'      => false,
+                'enrollment_date' => now()->subDays(12),
+                'android_version' => '13',
+                'latitude'        => 13.0827,
+                'longitude'       => 80.2707,
+                'location_raw'    => 'Chennai, Tamil Nadu',
+                'employee_code'   => 'EMP-HUL-002',
+            ],
+            // Unlinked devices (not yet assigned to employees)
+            [
+                'mdm_number'      => '1000600',
+                'serial_number'   => 'NEW0060001A',
+                'mdm_group'       => 'Zorvia',
+                'configuration'   => 'Zorvia',
+                'launcher_version'=> '6.29',
+                'device_status'   => 'on',
+                'permission_status'=> 'All permissions are granted',
+                'installation_status' => "- Headwind MDM: installed 6.29, available 6.29",
+                'sync_time'       => now()->subMinutes(8),
+                'model'           => 'SM-X230',
+                'default_launcher'=> 'com.hmdm.launcher',
+                'ip_address'      => '103.26.55.99',
+                'mdm_mode'        => true,
+                'kiosk_mode'      => false,
+                'enrollment_date' => now()->subDays(2),
+                'android_version' => '16',
+                'employee_code'   => null,
+            ],
+            [
+                'mdm_number'      => '1000601',
+                'serial_number'   => 'NEW0060002B',
+                'mdm_group'       => 'Zorvia',
+                'configuration'   => 'Zorvia',
+                'launcher_version'=> '6.29',
+                'device_status'   => 'on',
+                'permission_status'=> 'All permissions are granted',
+                'installation_status' => "- Headwind MDM: installed 6.29, available 6.29",
+                'sync_time'       => now()->subMinutes(15),
+                'model'           => 'SM-A145F',
+                'default_launcher'=> 'com.hmdm.launcher',
+                'ip_address'      => '103.26.56.100',
+                'mdm_mode'        => true,
+                'kiosk_mode'      => false,
+                'enrollment_date' => now()->subDays(1),
+                'android_version' => '14',
+                'employee_code'   => null,
+            ],
+        ];
+
+        foreach ($devices as $d) {
+            $empCode    = $d['employee_code'] ?? null;
+            $employee   = $empCode ? ($employees[$empCode] ?? null) : null;
+            unset($d['employee_code']);
+
+            MdmPortalDevice::updateOrCreate(
+                ['mdm_number' => $d['mdm_number']],
+                array_merge($d, [
+                    'employee_id' => $employee?->id,
+                    'synced_at'   => now(),
+                    'mdm_status'  => 'Active',
+                ])
+            );
+        }
+
+        // Log this seed as a system import
+        MdmImportLog::create([
+            'imported_by'  => $admin->id,
+            'filename'     => 'headwind_mdm_export_demo.csv',
+            'total_rows'   => count($devices),
+            'imported'     => count($devices),
+            'updated'      => 0,
+            'skipped'      => 0,
+            'auto_matched' => 0,
+            'status'       => 'completed',
+            'notes'        => 'Demo data seeded: ' . count($devices) . ' devices from Headwind MDM portal export.',
+        ]);
+
+        $this->command->info('✓ MDM demo data seeded — ' . count($devices) . ' portal devices.');
+    }
+}
