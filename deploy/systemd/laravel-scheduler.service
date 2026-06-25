@@ -1,0 +1,30 @@
+# Laravel Scheduler — Systemd service unit (alternative to Supervisor + cron).
+# Use this if your server uses systemd and you don't have Supervisor installed.
+#
+# INSTALL ON SERVER:
+#   sudo cp /var/www/html/deploy/systemd/laravel-scheduler.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable laravel-scheduler
+#   sudo systemctl start laravel-scheduler
+#   sudo systemctl status laravel-scheduler
+#
+# Replace /var/www/html with your actual deployment path.
+# Replace www-data with the Linux user that owns your project files.
+
+[Unit]
+Description=Laravel Scheduler (mdm:sync and other scheduled tasks)
+After=network.target mysql.service postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/html
+ExecStart=/usr/bin/php /var/www/html/artisan schedule:work
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/www/html/storage/logs/scheduler.log
+StandardError=append:/var/www/html/storage/logs/scheduler.log
+
+[Install]
+WantedBy=multi-user.target

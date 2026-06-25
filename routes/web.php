@@ -60,6 +60,16 @@ Route::middleware(['auth', 'verified', 'redirect.client'])->group(function () {
     Route::resource('clients', ClientController::class);
     Route::post('/clients/{client}/projects', [ClientController::class, 'storeProject'])->name('clients.projects.store');
     Route::resource('employees', EmployeeController::class);
+    Route::get('/employees-import', [EmployeeController::class, 'importForm'])->name('employees.import.form');
+    Route::post('/employees-import', [EmployeeController::class, 'import'])->name('employees.import');
+    Route::get('/employees-template', [EmployeeController::class, 'downloadTemplate'])->name('employees.template');
+
+    // Bulk assignment (company → employee, device → employee)
+    Route::get('/employees-bulk-assign', [EmployeeController::class, 'bulkAssignForm'])->name('employees.bulk-assign.form');
+    Route::post('/employees-bulk-assign/company', [EmployeeController::class, 'bulkAssignCompany'])->name('employees.bulk-assign.company');
+    Route::get('/employees-bulk-assign/company-template', [EmployeeController::class, 'bulkCompanyTemplate'])->name('employees.bulk-assign.company-template');
+    Route::post('/employees-bulk-assign/device', [EmployeeController::class, 'bulkAssignDevice'])->name('employees.bulk-assign.device');
+    Route::get('/employees-bulk-assign/device-template', [EmployeeController::class, 'bulkDeviceTemplate'])->name('employees.bulk-assign.device-template');
 
     // Procurement
     Route::prefix('procurement')->name('procurement.')->group(function () {

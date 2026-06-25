@@ -5,8 +5,42 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="fw-bold mb-0"><i class="bi bi-people me-2"></i>Employee Directory</h5>
-    <a href="{{ route('employees.create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add Employee</a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('employees.import.form') }}" class="btn btn-outline-success btn-sm"><i class="bi bi-cloud-upload"></i> Bulk Import</a>
+        <a href="{{ route('employees.bulk-assign.form') }}" class="btn btn-outline-info btn-sm"><i class="bi bi-link-45deg"></i> Bulk Assign</a>
+        <a href="{{ route('employees.create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add Employee</a>
+    </div>
 </div>
+
+@if(session('bulk_assign_summary'))
+@php $bas = session('bulk_assign_summary'); @endphp
+<div class="alert alert-{{ count($bas['errors']) ? 'warning' : 'success' }} alert-dismissible fade show">
+    <strong>Bulk Company Assignment:</strong>
+    {{ $bas['assigned'] }} assigned, {{ $bas['skipped'] }} skipped.
+    @if(count($bas['errors']))
+    <ul class="mb-0 mt-2">@foreach($bas['errors'] as $err)<li class="small">{{ $err }}</li>@endforeach</ul>
+    @endif
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+@endif
+
+@if(session('import_summary'))
+@php $s = session('import_summary'); @endphp
+<div class="alert alert-{{ count($s['errors']) ? 'warning' : 'success' }} alert-dismissible fade show">
+    <strong>Import Complete:</strong>
+    {{ $s['imported'] }} created, {{ $s['updated'] }} updated, {{ $s['skipped'] }} skipped.
+    @if(count($s['errors']))
+    <ul class="mb-0 mt-2">
+        @foreach($s['errors'] as $err)<li class="small">{{ $err }}</li>@endforeach
+    </ul>
+    @endif
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+@endif
+
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show">{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+@endif
 
 <div class="card mb-3">
     <div class="card-body py-2">
