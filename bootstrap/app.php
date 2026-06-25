@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'client'          => \App\Http\Middleware\EnsureClientRole::class,
             'redirect.client' => \App\Http\Middleware\RedirectClientUsers::class,
+            'api.token'       => \App\Http\Middleware\ApiTokenAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

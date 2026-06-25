@@ -108,18 +108,18 @@
             <i class="bi bi-shield-check"></i> Insurance
         </a>
 
-        <div class="nav-section">MDM</div>
+        <div class="nav-section">MDM Portal</div>
         <a href="{{ route('mdm.index') }}" class="nav-link {{ request()->routeIs('mdm.index') ? 'active' : '' }}">
-            <i class="bi bi-phone-fill"></i> MDM Analytics
+            <i class="bi bi-speedometer2"></i> Dashboard
         </a>
-        <a href="{{ route('mdm.devices') }}" class="nav-link {{ request()->routeIs('mdm.devices') || request()->routeIs('mdm.show') ? 'active' : '' }}">
-            <i class="bi bi-grid-3x3-gap"></i> MDM Devices
+        <a href="{{ route('mdm.sync') }}" class="nav-link {{ request()->routeIs('mdm.sync') ? 'active' : '' }}">
+            <i class="bi bi-database-fill-up"></i> Sync
         </a>
-        <a href="{{ route('mdm.employees') }}" class="nav-link {{ request()->routeIs('mdm.employees') ? 'active' : '' }}">
-            <i class="bi bi-person-lines-fill"></i> Emp-Device View
+        <a href="{{ route('mdm.devices') }}" class="nav-link {{ request()->routeIs('mdm.devices','mdm.show') ? 'active' : '' }}">
+            <i class="bi bi-phone-fill"></i> Devices
         </a>
-        <a href="{{ route('mdm.import') }}" class="nav-link {{ request()->routeIs('mdm.import') ? 'active' : '' }}">
-            <i class="bi bi-upload"></i> Import / Sync Log
+        <a href="{{ route('mdm.link') }}" class="nav-link {{ request()->routeIs('mdm.link') ? 'active' : '' }}">
+            <i class="bi bi-link-45deg"></i> Link Employee
         </a>
         <a href="{{ route('mdm.map') }}" class="nav-link {{ request()->routeIs('mdm.map') ? 'active' : '' }}">
             <i class="bi bi-geo-alt-fill"></i> Device Map
@@ -131,6 +131,22 @@
         </a>
         <a href="{{ route('flow') }}" class="nav-link {{ request()->routeIs('flow') ? 'active' : '' }}">
             <i class="bi bi-diagram-3"></i> Flow Document
+        </a>
+
+        <div class="nav-section">Messaging</div>
+        <a href="{{ route('whatsapp.index') }}" class="nav-link {{ request()->routeIs('whatsapp.index','whatsapp.create','whatsapp.store') ? 'active' : '' }}">
+            <i class="bi bi-whatsapp" style="color:#25d366"></i> Messages
+        </a>
+        <a href="{{ route('whatsapp.templates.index') }}" class="nav-link {{ request()->routeIs('whatsapp.templates.*') ? 'active' : '' }}">
+            <i class="bi bi-file-text"></i> WA Templates
+        </a>
+        <a href="{{ route('whatsapp.campaigns.index') }}" class="nav-link {{ request()->routeIs('whatsapp.campaigns.*') ? 'active' : '' }}">
+            <i class="bi bi-megaphone"></i> WA Campaigns
+        </a>
+
+        <div class="nav-section">Integrations</div>
+        <a href="{{ route('api-logs.index') }}" class="nav-link {{ request()->routeIs('api-logs.*') ? 'active' : '' }}">
+            <i class="bi bi-journal-code"></i> API Logs
         </a>
 
         <div class="nav-section">Admin</div>

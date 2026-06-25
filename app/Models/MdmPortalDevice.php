@@ -40,6 +40,38 @@ class MdmPortalDevice extends Model
         return $this->belongsTo(Employee::class);
     }
 
+    // ── Structured info_json sections ───────────────────────────────────────
+    // info_json is stored as { device: {...}, params: {...}, gps: {...} }
+    // Falls back gracefully to flat array for records synced before this change.
+
+    public function deviceSection(): array
+    {
+        $j = $this->info_json;
+        if (! is_array($j)) return [];
+        return is_array($j['device'] ?? null) ? $j['device'] : $j;
+    }
+
+    public function paramsSection(): array
+    {
+        $j = $this->info_json;
+        return is_array($j) ? ($j['params'] ?? []) : [];
+    }
+
+    public function gpsSection(): array
+    {
+        $j = $this->info_json;
+        return is_array($j) ? ($j['gps'] ?? []) : [];
+    }
+
+    public function batteryLevel(): ?int
+    {
+        $p = $this->paramsSection();
+        foreach (['battery', 'battery_level', 'batterylevel', 'battery_percentage', 'batterypercentage'] as $k) {
+            if (isset($p[$k]) && is_numeric($p[$k])) return (int) $p[$k];
+        }
+        return null;
+    }
+
     // ── Computed helpers ─────────────────────────────────────────────────────
 
     public function isOnline(): bool

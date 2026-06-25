@@ -99,6 +99,20 @@ return [
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
+        'mdm_pgsql' => [
+            'driver'         => 'pgsql',
+            'host'           => env('MDM_PG_HOST', 'g-mdm.globalspace.in'),
+            'port'           => env('MDM_PG_PORT', '5432'),
+            'database'       => env('MDM_PG_DATABASE', 'hmdm'),
+            'username'       => env('MDM_PG_USERNAME', 'hmdm_read'),
+            'password'       => env('MDM_PG_PASSWORD', ''),
+            'charset'        => 'utf8',
+            'prefix'         => '',
+            'prefix_indexes' => true,
+            'search_path'    => 'public',
+            'sslmode'        => env('MDM_PG_SSLMODE', 'prefer'),
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),

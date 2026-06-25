@@ -14,7 +14,7 @@ class SearchController extends Controller
 {
     public function index(Request $request)
     {
-        $q       = $request->get('q', '');
+        $q       = $request->input('q', '');
         $results = [];
 
         if (strlen($q) >= 2) {

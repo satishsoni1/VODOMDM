@@ -15,13 +15,24 @@ use App\Http\Controllers\RepairController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\ApiLogController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\MdmController;
 use App\Http\Controllers\VendorController;
+use App\Http\Controllers\WhatsAppCampaignController;
+use App\Http\Controllers\WhatsAppController;
+use App\Http\Controllers\WhatsAppTemplateController;
+use App\Http\Controllers\WhatsAppWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('dashboard'));
+
+// ── WhatsApp Webhook (public — no auth) ──────────────────────────────────────
+Route::prefix('webhook/whatsapp')->name('whatsapp.webhook.')->group(function () {
+    Route::get('/',  [WhatsAppWebhookController::class, 'verify'])->name('verify');
+    Route::post('/', [WhatsAppWebhookController::class, 'receive'])->name('receive');
+});
 
 // ── Client Portal ────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'client'])->prefix('client-portal')->name('client.')->group(function () {
@@ -123,6 +134,44 @@ Route::middleware(['auth', 'verified', 'redirect.client'])->group(function () {
     // Client Portal User Management
     Route::resource('client-users', ClientUserController::class)->except(['show']);
 
+    // WhatsApp Messaging
+    Route::prefix('whatsapp')->name('whatsapp.')->group(function () {
+        // Messages
+        Route::get('/',              [WhatsAppController::class, 'index'])->name('index');
+        Route::get('/compose',       [WhatsAppController::class, 'create'])->name('create');
+        Route::post('/',             [WhatsAppController::class, 'store'])->name('store');
+        Route::post('/{whatsapp}/send',   [WhatsAppController::class, 'sendNow'])->name('send');
+        Route::post('/{whatsapp}/cancel', [WhatsAppController::class, 'cancel'])->name('cancel');
+        Route::post('/process-due',  [WhatsAppController::class, 'processDue'])->name('process-due');
+        Route::get('/settings',      [WhatsAppController::class, 'settings'])->name('settings');
+
+        // Templates
+        Route::prefix('templates')->name('templates.')->group(function () {
+            Route::get('/',          [WhatsAppTemplateController::class, 'index'])->name('index');
+            Route::get('/create',    [WhatsAppTemplateController::class, 'create'])->name('create');
+            Route::post('/',         [WhatsAppTemplateController::class, 'store'])->name('store');
+            Route::get('/{whatsappTemplate}', [WhatsAppTemplateController::class, 'show'])->name('show');
+            Route::post('/sync',     [WhatsAppTemplateController::class, 'sync'])->name('sync');
+            Route::delete('/{whatsappTemplate}', [WhatsAppTemplateController::class, 'destroy'])->name('destroy');
+        });
+
+        // Campaigns
+        Route::prefix('campaigns')->name('campaigns.')->group(function () {
+            Route::get('/',          [WhatsAppCampaignController::class, 'index'])->name('index');
+            Route::get('/create',    [WhatsAppCampaignController::class, 'create'])->name('create');
+            Route::post('/',         [WhatsAppCampaignController::class, 'store'])->name('store');
+            Route::get('/{campaign}',[WhatsAppCampaignController::class, 'show'])->name('show');
+            Route::post('/{campaign}/launch', [WhatsAppCampaignController::class, 'launch'])->name('launch');
+            Route::post('/{campaign}/cancel', [WhatsAppCampaignController::class, 'cancel'])->name('cancel');
+        });
+    });
+
+    // API Logs
+    Route::prefix('api-logs')->name('api-logs.')->group(function () {
+        Route::get('/',         [ApiLogController::class, 'index'])->name('index');
+        Route::get('/{apiLog}', [ApiLogController::class, 'show'])->name('show');
+    });
+
     // Global Search
     Route::get('/search', [SearchController::class, 'index'])->name('search');
 
@@ -131,15 +180,16 @@ Route::middleware(['auth', 'verified', 'redirect.client'])->group(function () {
 
     // MDM Portal
     Route::prefix('mdm')->name('mdm.')->group(function () {
-        Route::get('/',              [MdmController::class, 'index'])->name('index');
-        Route::get('/devices',       [MdmController::class, 'devices'])->name('devices');
-        Route::get('/employees',     [MdmController::class, 'employees'])->name('employees');
-        Route::get('/import',        [MdmController::class, 'import'])->name('import');
-        Route::post('/import',       [MdmController::class, 'processImport'])->name('import.process');
-        Route::post('/auto-match',   [MdmController::class, 'autoMatch'])->name('auto-match');
-        Route::get('/map',           [MdmController::class, 'map'])->name('map');
-        Route::get('/{mdm}',         [MdmController::class, 'show'])->name('show');
-        Route::post('/{mdm}/link-employee', [MdmController::class, 'linkEmployee'])->name('link-employee');
+        Route::get('/',                [MdmController::class, 'dashboard'])->name('index');
+        Route::get('/sync',            [MdmController::class, 'sync'])->name('sync');
+        Route::post('/sync/run',       [MdmController::class, 'runSync'])->name('sync.run');
+        Route::get('/sync/progress',   [MdmController::class, 'syncProgress'])->name('sync.progress');
+        Route::post('/sync/automatch', [MdmController::class, 'autoMatch'])->name('sync.automatch');
+        Route::get('/devices',         [MdmController::class, 'devices'])->name('devices');
+        Route::get('/devices/{mdm}',   [MdmController::class, 'show'])->name('show');
+        Route::get('/link',            [MdmController::class, 'link'])->name('link');
+        Route::post('/link/{mdm}',     [MdmController::class, 'saveLink'])->name('link.save');
+        Route::get('/map',             [MdmController::class, 'map'])->name('map');
     });
 });
 
