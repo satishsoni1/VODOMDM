@@ -9,6 +9,7 @@ use App\Models\DeviceModel;
 use App\Models\Vendor;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class DeviceController extends Controller
 {
@@ -116,6 +117,45 @@ class DeviceController extends Controller
         $device->delete();
 
         return redirect()->route('devices.index')->with('success', 'Device removed.');
+    }
+
+    public function labels(Request $request)
+    {
+        if ($request->boolean('all')) {
+            $query = Device::with('model.brand')->orderBy('asset_tag');
+
+            if ($request->filled('q')) {
+                $q = $request->q;
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('serial_number', 'like', "%$q%")
+                        ->orWhere('asset_tag', 'like', "%$q%")
+                        ->orWhere('imei1', 'like', "%$q%")
+                        ->orWhere('imei2', 'like', "%$q%");
+                });
+            }
+
+            if ($request->filled('status')) {
+                $query->where('lifecycle_status', $request->status);
+            }
+
+            $devices = $query->get();
+        } else {
+            $devices = Device::with('model.brand')
+                ->whereIn('id', $request->input('device_ids', []))
+                ->orderBy('asset_tag')
+                ->get();
+        }
+
+        return view('devices.labels', compact('devices'));
+    }
+
+    public function qrCode(Device $device)
+    {
+        $url = route('scan.show', ['device' => $device->qr_token]);
+
+        $svg = QrCode::format('svg')->size(400)->margin(1)->generate($url);
+
+        return response($svg, 200, ['Content-Type' => 'image/svg+xml']);
     }
 
     // ── Bulk Import ─────────────────────────────────────────────────────────

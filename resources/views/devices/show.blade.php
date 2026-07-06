@@ -75,6 +75,21 @@
         </div>
     </div>
 
+    {{-- QR Code — device scan label --}}
+    <div class="col-md-4">
+        <div class="card h-100" id="qr-card">
+            <div class="card-header"><strong>QR Scan Label</strong></div>
+            <div class="card-body text-center">
+                <img src="{{ route('devices.qr', $device) }}" alt="Device QR Code" class="img-fluid mb-2" style="max-width:160px" id="qr-image">
+                <div class="font-monospace small text-muted mb-2">{{ $device->asset_tag }}</div>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="printQrLabel()"><i class="bi bi-printer"></i> Print</button>
+                    <a href="{{ route('devices.qr', $device) }}" download="qr-{{ $device->asset_tag }}.svg" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i> Download</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- MDM Status --}}
     @if($device->latestMdmSync)
     <div class="col-md-6">
@@ -178,3 +193,22 @@
     @endif
 </div>
 @endsection
+
+@push('styles')
+<style>
+    @media print {
+        body * { visibility: hidden; }
+        #qr-card, #qr-card * { visibility: visible; }
+        #qr-card { position: fixed; top: 0; left: 0; width: 45mm; border: none; box-shadow: none; }
+        #qr-image { max-width: 40mm !important; }
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    function printQrLabel() {
+        window.print();
+    }
+</script>
+@endpush

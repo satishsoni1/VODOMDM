@@ -4,6 +4,8 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientOnboardingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\DeviceLinkRequestController;
+use App\Http\Controllers\DeviceScanController;
 use App\Http\Controllers\DispatchController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\HandoverController;
@@ -33,6 +35,13 @@ Route::get('/', fn () => redirect()->route('dashboard'));
 Route::prefix('webhook/whatsapp')->name('whatsapp.webhook.')->group(function () {
     Route::get('/',  [WhatsAppWebhookController::class, 'verify'])->name('verify');
     Route::post('/', [WhatsAppWebhookController::class, 'receive'])->name('receive');
+});
+
+// ── Device QR Scan (public — no auth) ────────────────────────────────────────
+Route::middleware('throttle:30,1')->prefix('scan')->name('scan.')->group(function () {
+    Route::get('/{device:qr_token}', [DeviceScanController::class, 'show'])->name('show');
+    Route::post('/{device:qr_token}/lookup-employee', [DeviceScanController::class, 'lookupEmployee'])->name('lookup-employee');
+    Route::post('/{device:qr_token}/request-link', [DeviceScanController::class, 'requestLink'])->name('request-link');
 });
 
 // ── Client Portal ────────────────────────────────────────────────────────────
@@ -121,7 +130,16 @@ Route::middleware(['auth', 'verified', 'redirect.client'])->group(function () {
     Route::get('/devices-import', [DeviceController::class, 'importForm'])->name('devices.import.form');
     Route::post('/devices-import', [DeviceController::class, 'import'])->name('devices.import');
     Route::get('/devices-template', [DeviceController::class, 'downloadTemplate'])->name('devices.template');
+    Route::get('/devices/{device}/qr', [DeviceController::class, 'qrCode'])->name('devices.qr');
+    Route::match(['get', 'post'], '/devices/labels', [DeviceController::class, 'labels'])->name('devices.labels');
     Route::resource('devices', DeviceController::class);
+
+    // Device Link Requests (from QR self-link scans)
+    Route::prefix('link-requests')->name('link-requests.')->group(function () {
+        Route::get('/', [DeviceLinkRequestController::class, 'index'])->name('index');
+        Route::post('/{linkRequest}/approve', [DeviceLinkRequestController::class, 'approve'])->name('approve');
+        Route::post('/{linkRequest}/reject', [DeviceLinkRequestController::class, 'reject'])->name('reject');
+    });
 
     // Dispatch
     Route::resource('dispatches', DispatchController::class);

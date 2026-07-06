@@ -7,19 +7,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Device extends Model
 {
     use SoftDeletes;
 
     protected $fillable = [
-        'asset_tag', 'serial_number', 'imei1', 'imei2',
+        'qr_token', 'asset_tag', 'serial_number', 'imei1', 'imei2',
         'device_model_id', 'grn_id', 'purchase_order_id', 'vendor_id', 'client_id',
         'box_number', 'color', 'purchase_date', 'purchase_price',
         'warranty_months', 'warranty_expiry', 'accessories',
         'lifecycle_status', 'condition', 'current_location_id', 'current_employee_id',
         'current_group', 'notes',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Device $device) {
+            $device->qr_token ??= (string) Str::uuid();
+        });
+    }
 
     protected $casts = [
         'purchase_date' => 'date',
@@ -160,5 +168,10 @@ class Device extends Model
     public function disposal(): HasOne
     {
         return $this->hasOne(DisposalRecord::class);
+    }
+
+    public function linkRequests(): HasMany
+    {
+        return $this->hasMany(DeviceLinkRequest::class);
     }
 }
