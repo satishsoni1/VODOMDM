@@ -1,53 +1,41 @@
 @extends('layouts.main')
-
-@section('title', 'Devices')
-
+@section('title','Device Tracking Report')
 @section('breadcrumb')
-    <li class="breadcrumb-item active">Devices</li>
+    <li class="breadcrumb-item"><a href="{{ route('reports.index') }}">Reports</a></li>
+    <li class="breadcrumb-item active">Device Tracking</li>
 @endsection
 
 @section('content')
-@if(session('device_import_summary'))
-@php $dis = session('device_import_summary'); @endphp
-<div class="alert alert-{{ count($dis['errors']) ? 'warning' : 'success' }} alert-dismissible fade show">
-    <strong>Import Complete:</strong>
-    {{ $dis['imported'] }} created, {{ $dis['updated'] }} updated, {{ $dis['skipped'] }} skipped,
-    {{ $dis['mdm_matched'] }} auto-linked to MDM.
-    @if(count($dis['errors']))
-    <ul class="mb-0 mt-2">
-        @foreach($dis['errors'] as $err)<li class="small">{{ $err }}</li>@endforeach
-    </ul>
-    @endif
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-@endif
-
-@if(session('success'))
-<div class="alert alert-success alert-dismissible fade show">{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-@endif
-
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="fw-bold mb-0"><i class="bi bi-phone me-2"></i>Device Registry</h5>
-    <div>
-        <a href="{{ route('devices.template') }}" class="btn btn-outline-success btn-sm">
-            <i class="bi bi-file-earmark-spreadsheet"></i> Template
-        </a>
-        <a href="{{ route('devices.import.form') }}" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-cloud-upload"></i> Import Devices
-        </a>
-        <a href="{{ route('devices.create') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg"></i> Add Device
-        </a>
-    </div>
+    <h5 class="fw-bold mb-0"><i class="bi bi-geo-alt me-2"></i>Device Tracking</h5>
+    <a href="{{ route('reports.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
 </div>
 
 <div class="card mb-3">
     <div class="card-body py-2">
         <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-4">
-                <input type="text" class="form-control form-control-sm" name="q" placeholder="Serial / IMEI / Asset Tag" value="{{ request('q') }}">
+            <div class="col-md-2">
+                <select class="form-select form-select-sm" name="employee_id">
+                    <option value="">All Employees</option>
+                    @foreach($employees as $emp)
+                        <option value="{{ $emp->id }}" {{ request('employee_id') == $emp->id ? 'selected' : '' }}>
+                            {{ $emp->employee_code }} — {{ $emp->name }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
+                <select class="form-select form-select-sm" name="location_id">
+                    <option value="">All Warehouses</option>
+                    @foreach($locations as $loc)
+                        <option value="{{ $loc->id }}" {{ request('location_id') == $loc->id ? 'selected' : '' }}>{{ $loc->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control form-control-sm" name="group" placeholder="Group" value="{{ request('group') }}">
+            </div>
+            <div class="col-md-2">
                 <select class="form-select form-select-sm" name="status">
                     <option value="">All Statuses</option>
                     @foreach(['in_stock','assigned','in_transit','under_repair','disposed','lost'] as $s)
@@ -55,9 +43,16 @@
                     @endforeach
                 </select>
             </div>
+            <div class="col-md-2">
+                <select class="form-select form-select-sm" name="mdm">
+                    <option value="">MDM: Any</option>
+                    <option value="installed" {{ request('mdm') == 'installed' ? 'selected' : '' }}>MDM Installed</option>
+                    <option value="not_installed" {{ request('mdm') == 'not_installed' ? 'selected' : '' }}>Not Enrolled</option>
+                </select>
+            </div>
             <div class="col-auto">
                 <button class="btn btn-sm btn-primary"><i class="bi bi-search"></i> Filter</button>
-                <a href="{{ route('devices.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+                <a href="{{ route('reports.device-tracking') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
             </div>
         </form>
     </div>
@@ -69,15 +64,14 @@
             <thead class="table-dark">
                 <tr>
                     <th>Asset Tag</th>
-                    <th>Serial Number</th>
+                    <th>Serial / IMEI</th>
                     <th>Model</th>
-                    <th>IMEI 1</th>
                     <th>Warehouse</th>
-                    <th>Assigned To</th>
+                    <th>Employee</th>
                     <th>Group</th>
                     <th>Status</th>
                     <th>MDM Status</th>
-                    <th>Actions</th>
+                    <th>Last Handover</th>
                 </tr>
             </thead>
             <tbody>
@@ -86,11 +80,16 @@
                     <td class="font-monospace fw-bold">
                         <a href="{{ route('devices.show', $device) }}" class="text-decoration-none">{{ $device->asset_tag }}</a>
                     </td>
-                    <td class="font-monospace small">{{ $device->serial_number }}</td>
+                    <td class="font-monospace small">{{ $device->serial_number }}<br>{{ $device->imei1 ?? '—' }}</td>
                     <td>{{ $device->model?->brand?->name }} {{ $device->model?->model_name }}</td>
-                    <td class="font-monospace small">{{ $device->imei1 ?? '—' }}</td>
                     <td>{{ $device->currentLocation?->name ?? '—' }}</td>
-                    <td>{{ $device->currentEmployee?->name ?? '—' }}</td>
+                    <td>
+                        @if($device->currentEmployee)
+                            {{ $device->currentEmployee->employee_code }} — {{ $device->currentEmployee->name }}
+                        @else
+                            —
+                        @endif
+                    </td>
                     <td>{{ $device->current_group ?? '—' }}</td>
                     <td>
                         @php
@@ -111,15 +110,11 @@
                             <span class="badge bg-secondary">Not Enrolled</span>
                         @endif
                     </td>
-                    <td>
-                        <a href="{{ route('devices.show', $device) }}" class="btn btn-xs btn-outline-primary btn-sm py-0 px-1">
-                            <i class="bi bi-eye"></i>
-                        </a>
-                    </td>
+                    <td>{{ $device->latestHandover?->handover_date?->format('Y-m-d') ?? '—' }}</td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="10" class="text-center py-4 text-muted">No devices found.</td>
+                    <td colspan="9" class="text-center py-4 text-muted">No devices found.</td>
                 </tr>
                 @endforelse
             </tbody>

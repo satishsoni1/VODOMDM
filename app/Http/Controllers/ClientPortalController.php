@@ -23,13 +23,14 @@ class ClientPortalController extends Controller
 
         $totalEmployees = Employee::where('client_id', $clientId)->count();
 
-        // Devices via employees
+        // Devices via employees or tagged directly to this client
         $empIds = Employee::where('client_id', $clientId)->pluck('id');
+        $clientDevices = fn ($q) => $q->where('client_id', $clientId)->orWhereIn('current_employee_id', $empIds);
 
-        $totalDevices  = Device::whereIn('current_employee_id', $empIds)->count();
-        $activeDevices = Device::whereIn('current_employee_id', $empIds)
+        $totalDevices  = Device::where($clientDevices)->count();
+        $activeDevices = Device::where($clientDevices)
             ->where('lifecycle_status', 'activated')->count();
-        $inRepair      = Device::whereIn('current_employee_id', $empIds)
+        $inRepair      = Device::where($clientDevices)
             ->whereIn('lifecycle_status', ['under_repair', 'awaiting_parts'])->count();
 
         // MDM status for linked employees
@@ -45,7 +46,7 @@ class ClientPortalController extends Controller
             ->whereIn('status', ['open', 'in_progress'])->count();
 
         // Lifecycle distribution
-        $lifecycleStats = Device::whereIn('current_employee_id', $empIds)
+        $lifecycleStats = Device::where($clientDevices)
             ->select('lifecycle_status', DB::raw('count(*) as cnt'))
             ->groupBy('lifecycle_status')
             ->orderByDesc('cnt')
@@ -96,7 +97,7 @@ class ClientPortalController extends Controller
         $empIds   = Employee::where('client_id', $clientId)->pluck('id');
 
         $query = Device::with(['model.brand', 'currentEmployee', 'mdmPortalDevice'])
-            ->whereIn('current_employee_id', $empIds);
+            ->where(fn ($q) => $q->where('client_id', $clientId)->orWhereIn('current_employee_id', $empIds));
 
         if ($request->filled('q')) {
             $q = $request->q;
@@ -118,7 +119,7 @@ class ClientPortalController extends Controller
 
         $devices = $query->orderByDesc('updated_at')->paginate(20)->withQueryString();
 
-        $statusList = Device::whereIn('current_employee_id', $empIds)
+        $statusList = Device::where(fn ($q) => $q->where('client_id', $clientId)->orWhereIn('current_employee_id', $empIds))
             ->distinct()->pluck('lifecycle_status');
 
         return view('client-portal.devices', compact('devices', 'statusList'));
@@ -130,8 +131,10 @@ class ClientPortalController extends Controller
         $clientId = $this->clientId();
         $empIds   = Employee::where('client_id', $clientId)->pluck('id');
 
-        // Ensure device belongs to this client
-        if (!in_array($device->current_employee_id, $empIds->toArray())) {
+        // Ensure device belongs to this client (tagged directly or via an employee)
+        $belongsToClient = $device->client_id === $clientId
+            || in_array($device->current_employee_id, $empIds->toArray());
+        if (!$belongsToClient) {
             abort(403, 'Device does not belong to your account.');
         }
 

@@ -301,12 +301,12 @@ class EmployeeController extends Controller
         ];
 
         $columns = [
-            'company_code', 'employee_code', 'asset_tag', 'serial_number',
+            'company_code', 'employee_code', 'asset_tag', 'serial_number', 'imei', 'group',
             'handover_date', 'handover_location', 'handover_city',
             'condition', 'accessories', 'remarks',
         ];
         $sample = [
-            'CLIENT001', 'EMP001', 'AST-00123', '',
+            'CLIENT001', 'EMP001', 'AST-00123', '', '', 'Sales Team',
             '2024-06-01', 'Head Office', 'Mumbai',
             'new', 'Charger, Box', 'Initial issue',
         ];

@@ -105,16 +105,16 @@
             <div class="card-body">
                 <p class="mb-2">Upload a CSV/Excel to assign devices to employees in bulk. For each row the system:</p>
                 <ul class="mb-2">
-                    <li>Finds the device by <strong>asset_tag</strong> or <strong>serial_number</strong> (at least one required).</li>
+                    <li>Finds the device by <strong>asset_tag</strong>, <strong>serial_number</strong>, or <strong>imei</strong> (at least one required).</li>
                     <li>Finds the employee by <strong>company_code + employee_code</strong>.</li>
-                    <li>Creates a <strong>Handover record</strong> and updates the device status to <em>assigned</em>.</li>
+                    <li>Creates a <strong>Handover record</strong>, updates the device status to <em>assigned</em>, and tags it with the optional <strong>group</strong> label for tracking/filtering.</li>
                 </ul>
                 <div class="table-responsive">
                     <table class="table table-sm table-bordered mb-0" style="font-size:.85rem;">
                         <thead class="table-light">
                             <tr>
                                 <th>company_code</th><th>employee_code</th>
-                                <th>asset_tag</th><th>serial_number</th>
+                                <th>asset_tag</th><th>serial_number</th><th>imei</th><th>group</th>
                                 <th>handover_date</th><th>handover_location</th>
                                 <th>handover_city</th><th>condition</th>
                                 <th>accessories</th><th>remarks</th>
@@ -123,14 +123,21 @@
                         <tbody>
                             <tr>
                                 <td>CLIENT001</td><td>EMP001</td>
-                                <td>AST-00123</td><td></td>
+                                <td>AST-00123</td><td></td><td></td><td>Sales Team</td>
                                 <td>2024-06-01</td><td>Head Office</td>
                                 <td>Mumbai</td><td>new</td>
                                 <td>Charger, Box</td><td>Initial issue</td>
                             </tr>
                             <tr>
                                 <td>CLIENT001</td><td>EMP002</td>
-                                <td></td><td>SN9876543</td>
+                                <td></td><td>SN9876543</td><td></td><td>Region-North</td>
+                                <td>2024-06-01</td><td></td>
+                                <td>Delhi</td><td>good</td>
+                                <td></td><td></td>
+                            </tr>
+                            <tr>
+                                <td>CLIENT001</td><td>EMP003</td>
+                                <td></td><td></td><td>351234567890123</td><td>Region-North</td>
                                 <td>2024-06-01</td><td></td>
                                 <td>Delhi</td><td>good</td>
                                 <td></td><td></td>

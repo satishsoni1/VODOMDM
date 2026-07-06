@@ -11,7 +11,7 @@ class DeviceHandover extends Model
         'handover_number', 'device_id', 'employee_id', 'client_id', 'client_project_id',
         'handed_over_by', 'dispatch_batch_id', 'handover_date', 'handover_location',
         'handover_city', 'acknowledgement_received', 'acknowledged_at', 'acknowledgement_file',
-        'condition_at_handover', 'accessories_handed', 'status', 'remarks',
+        'condition_at_handover', 'accessories_handed', 'status', 'remarks', 'assignment_group',
     ];
 
     protected $casts = [

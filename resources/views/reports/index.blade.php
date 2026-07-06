@@ -87,6 +87,7 @@
         ['route'=>'reports.insurance','icon'=>'bi-shield-check','color'=>'info','title'=>'Insurance Report','desc'=>'Active policies, expiring coverage, claim pipeline and settlement analysis.'],
         ['route'=>'reports.financial','icon'=>'bi-currency-rupee','color'=>'warning','title'=>'Financial Report','desc'=>'Procurement spend, repair costs, insurance premiums, claims settled — cost overview.'],
         ['route'=>'reports.device-lifecycle','icon'=>'bi-recycle','color'=>'secondary','title'=>'Device Lifecycle','desc'=>'Age analysis, warranty expiry, condition distribution and lifecycle status breakdown.'],
+        ['route'=>'reports.device-tracking','icon'=>'bi-geo-alt','color'=>'primary','title'=>'Device Tracking','desc'=>'Employee, warehouse, group and MDM-installed status for every device in one filterable view.'],
     ];
     @endphp
     @foreach($reports as $r)

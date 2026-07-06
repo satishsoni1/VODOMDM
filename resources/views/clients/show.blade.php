@@ -14,6 +14,7 @@
     <div class="d-flex gap-2">
         <a href="{{ route('clients.edit',$client) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> Edit</a>
         <a href="{{ route('employees.create', ['client_id'=>$client->id]) }}" class="btn btn-sm btn-success"><i class="bi bi-person-plus"></i> Add Employee</a>
+        <a href="{{ route('onboarding.devices', $client) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-phone"></i> Assign Devices</a>
     </div>
 </div>
 

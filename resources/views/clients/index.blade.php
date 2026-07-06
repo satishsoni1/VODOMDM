@@ -5,7 +5,10 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="fw-bold mb-0"><i class="bi bi-briefcase me-2"></i>Client Master</h5>
-    <a href="{{ route('clients.create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add Client</a>
+    <div>
+        <a href="{{ route('onboarding.start') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-rocket-takeoff"></i> Onboard New Client</a>
+        <a href="{{ route('clients.create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add Client</a>
+    </div>
 </div>
 
 <div class="card mb-3">

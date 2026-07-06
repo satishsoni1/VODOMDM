@@ -306,7 +306,7 @@ class MdmPostgresService
                 // ── Upsert mdm_devices (normalized) ──────────────────────────
                 if ($mdmDevBatch) {
                     foreach (array_chunk($mdmDevBatch, self::UPSERT_CHUNK) as $chunk) {
-                        MdmDevice::upsert($chunk, ['id'], $this->mdmDeviceUpsertCols());
+                        $this->upsertMdmDeviceChunk($chunk);
                     }
                 }
 
@@ -978,6 +978,57 @@ class MdmPostgresService
             'created_at'          => now(),
             'updated_at'          => now(),
         ];
+    }
+
+    /**
+     * Upsert one chunk of mdm_devices rows keyed on `id`. A device can be
+     * re-enrolled in the MDM portal under a brand-new PG id while keeping the
+     * same human-readable `pg_number`; when that happens the stale row (old id,
+     * same pg_number) is still sitting locally and collides with the incoming
+     * insert on the `pg_number` unique index (MySQL can't satisfy the `id` and
+     * `pg_number` unique constraints against two different existing rows at
+     * once, so ON DUPLICATE KEY UPDATE fails with error 1062 instead of
+     * updating). Resolve that by deleting the stale row first, carrying its
+     * manual local_device_id/local_employee_id link forward onto the new id.
+     */
+    private function upsertMdmDeviceChunk(array $chunk): void
+    {
+        $pgNumberToNewId = array_column($chunk, 'id', 'pg_number');
+
+        $staleRows = MdmDevice::whereIn('pg_number', array_keys($pgNumberToNewId))
+            ->whereNotIn('id', array_values($pgNumberToNewId))
+            ->get(['id', 'pg_number', 'local_device_id', 'local_employee_id']);
+
+        $carryForward = [];
+        foreach ($staleRows as $stale) {
+            if ($stale->local_device_id || $stale->local_employee_id) {
+                $carryForward[$pgNumberToNewId[$stale->pg_number]] = [
+                    'local_device_id'   => $stale->local_device_id,
+                    'local_employee_id' => $stale->local_employee_id,
+                ];
+            }
+        }
+
+        if ($staleRows->isNotEmpty()) {
+            Log::warning('MDM sync: reassigning pg_number to a new device id', [
+                'stale_ids' => $staleRows->pluck('id', 'pg_number')->toArray(),
+            ]);
+            MdmDevice::whereIn('id', $staleRows->pluck('id'))->delete();
+        }
+
+        try {
+            MdmDevice::upsert($chunk, ['id'], $this->mdmDeviceUpsertCols());
+        } catch (\Throwable $e) {
+            Log::warning('MDM sync: mdm_devices chunk upsert failed, skipping chunk', ['err' => $e->getMessage()]);
+            return;
+        }
+
+        foreach ($carryForward as $newId => $links) {
+            MdmDevice::where('id', $newId)
+                ->whereNull('local_device_id')
+                ->whereNull('local_employee_id')
+                ->update($links);
+        }
     }
 
     private function mdmDeviceUpsertCols(): array

@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Device;
 use App\Models\DemandRequest;
 use App\Models\DispatchBatch;
+use App\Models\Employee;
 use App\Models\Grn;
 use App\Models\InsuranceClaim;
 use App\Models\InsurancePolicy;
+use App\Models\Location;
 use App\Models\PurchaseOrder;
 use App\Models\RecoveryCase;
 use App\Models\RepairOrder;
@@ -165,5 +167,41 @@ class ReportController extends Controller
             ->orderBy('warranty_expiry')->get();
 
         return view('reports.device_lifecycle', compact('lifecycleCount', 'conditionCount', 'ageGroups', 'warrantyExpiring'));
+    }
+
+    public function deviceTracking(Request $request)
+    {
+        $query = Device::with(['model.brand', 'currentEmployee', 'currentLocation', 'mdmDevice', 'latestHandover'])
+            ->orderBy('updated_at', 'desc');
+
+        if ($request->filled('employee_id')) {
+            $query->where('current_employee_id', $request->employee_id);
+        }
+
+        if ($request->filled('location_id')) {
+            $query->where('current_location_id', $request->location_id);
+        }
+
+        if ($request->filled('group')) {
+            $query->where('current_group', 'like', '%' . $request->group . '%');
+        }
+
+        if ($request->filled('status')) {
+            $query->where('lifecycle_status', $request->status);
+        }
+
+        if ($request->filled('mdm')) {
+            if ($request->mdm === 'installed') {
+                $query->whereHas('mdmDevice');
+            } elseif ($request->mdm === 'not_installed') {
+                $query->whereDoesntHave('mdmDevice');
+            }
+        }
+
+        $devices   = $query->paginate(30)->withQueryString();
+        $employees = Employee::orderBy('name')->get(['id', 'name', 'employee_code']);
+        $locations = Location::where('type', 'warehouse')->orderBy('name')->get(['id', 'name']);
+
+        return view('reports.device_tracking', compact('devices', 'employees', 'locations'));
     }
 }

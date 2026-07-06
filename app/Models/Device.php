@@ -17,7 +17,8 @@ class Device extends Model
         'device_model_id', 'grn_id', 'purchase_order_id', 'vendor_id', 'client_id',
         'box_number', 'color', 'purchase_date', 'purchase_price',
         'warranty_months', 'warranty_expiry', 'accessories',
-        'lifecycle_status', 'condition', 'current_location_id', 'current_employee_id', 'notes',
+        'lifecycle_status', 'condition', 'current_location_id', 'current_employee_id',
+        'current_group', 'notes',
     ];
 
     protected $casts = [
@@ -71,6 +72,16 @@ class Device extends Model
         return $this->hasOne(MdmPortalDevice::class);
     }
 
+    public function mdmDevice(): HasOne
+    {
+        return $this->hasOne(MdmDevice::class, 'local_device_id');
+    }
+
+    public function isMdmInstalled(): bool
+    {
+        return $this->mdmDevice !== null;
+    }
+
     public function mdmEnrollment(): HasOne
     {
         return $this->hasOne(DeviceMdmEnrollment::class)->latestOfMany();
@@ -94,6 +105,11 @@ class Device extends Model
     public function handovers(): HasMany
     {
         return $this->hasMany(DeviceHandover::class);
+    }
+
+    public function latestHandover(): HasOne
+    {
+        return $this->hasOne(DeviceHandover::class)->latestOfMany('handover_date');
     }
 
     public function ownershipHistory(): HasMany

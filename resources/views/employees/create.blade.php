@@ -107,7 +107,7 @@
         <select class="form-select" name="client_id" id="clientSelect" onchange="loadProjects(this.value)">
             <option value="">— Select Client —</option>
             @foreach($clients as $c)
-            <option value="{{ $c->id }}" {{ old('client_id')==$c->id?'selected':'' }}>{{ $c->name }}</option>
+            <option value="{{ $c->id }}" {{ (old('client_id') ?? request('client_id'))==$c->id?'selected':'' }}>{{ $c->name }}</option>
             @endforeach
         </select>
     </div>

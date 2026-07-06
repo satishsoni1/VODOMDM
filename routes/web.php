@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientOnboardingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\DispatchController;
@@ -59,6 +60,19 @@ Route::middleware(['auth', 'verified', 'redirect.client'])->group(function () {
     Route::delete('/vendors/{vendor}/contacts/{contact}', [VendorController::class, 'destroyContact'])->name('vendors.contacts.destroy');
     Route::resource('clients', ClientController::class);
     Route::post('/clients/{client}/projects', [ClientController::class, 'storeProject'])->name('clients.projects.store');
+
+    // Guided Client Onboarding
+    Route::prefix('onboarding')->name('onboarding.')->group(function () {
+        Route::get('/', [ClientOnboardingController::class, 'start'])->name('start');
+        Route::post('/', [ClientOnboardingController::class, 'storeClient'])->name('store');
+    });
+    Route::prefix('clients/{client}/onboarding')->name('onboarding.')->group(function () {
+        Route::get('/employees', [ClientOnboardingController::class, 'employees'])->name('employees');
+        Route::post('/employees', [ClientOnboardingController::class, 'storeEmployee'])->name('employees.store');
+        Route::get('/devices', [ClientOnboardingController::class, 'devices'])->name('devices');
+        Route::post('/devices', [ClientOnboardingController::class, 'assignDevices'])->name('devices.assign');
+        Route::get('/finish', [ClientOnboardingController::class, 'finish'])->name('finish');
+    });
     Route::resource('employees', EmployeeController::class);
     Route::get('/employees-import', [EmployeeController::class, 'importForm'])->name('employees.import.form');
     Route::post('/employees-import', [EmployeeController::class, 'import'])->name('employees.import');
@@ -104,6 +118,9 @@ Route::middleware(['auth', 'verified', 'redirect.client'])->group(function () {
     });
 
     // Devices
+    Route::get('/devices-import', [DeviceController::class, 'importForm'])->name('devices.import.form');
+    Route::post('/devices-import', [DeviceController::class, 'import'])->name('devices.import');
+    Route::get('/devices-template', [DeviceController::class, 'downloadTemplate'])->name('devices.template');
     Route::resource('devices', DeviceController::class);
 
     // Dispatch
@@ -139,6 +156,7 @@ Route::middleware(['auth', 'verified', 'redirect.client'])->group(function () {
         Route::get('/insurance',         [ReportController::class, 'insurance'])->name('insurance');
         Route::get('/financial',         [ReportController::class, 'financial'])->name('financial');
         Route::get('/device-lifecycle',  [ReportController::class, 'deviceLifecycle'])->name('device-lifecycle');
+        Route::get('/device-tracking',   [ReportController::class, 'deviceTracking'])->name('device-tracking');
     });
 
     // Client Portal User Management

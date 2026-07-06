@@ -4,11 +4,9 @@ namespace App\Imports;
 
 use App\Models\Client;
 use App\Models\Device;
-use App\Models\DeviceHandover;
 use App\Models\Employee;
-use App\Models\OwnershipHistory;
+use App\Services\DeviceAssignmentService;
 use Carbon\Carbon;
-use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -40,6 +38,8 @@ class BulkDeviceAssignImport implements OnEachRow, WithChunkReading, WithHeading
 
         $assetTag     = trim($data['asset_tag']     ?? '');
         $serialNumber = trim($data['serial_number'] ?? '');
+        $imei         = trim($data['imei']          ?? '');
+        $group        = trim($data['group']         ?? '');
         $empCode      = trim($data['employee_code'] ?? '');
         $companyCode  = trim($data['company_code']  ?? '');
 
@@ -49,8 +49,8 @@ class BulkDeviceAssignImport implements OnEachRow, WithChunkReading, WithHeading
             return;
         }
 
-        if ($assetTag === '' && $serialNumber === '') {
-            $this->errors[] = "Row {$rowIndex} ({$empCode}): asset_tag or serial_number is required — skipped.";
+        if ($assetTag === '' && $serialNumber === '' && $imei === '') {
+            $this->errors[] = "Row {$rowIndex} ({$empCode}): asset_tag, serial_number, or imei is required — skipped.";
             $this->skippedCount++;
             return;
         }
@@ -63,8 +63,11 @@ class BulkDeviceAssignImport implements OnEachRow, WithChunkReading, WithHeading
         if (!$device && $serialNumber !== '') {
             $device = Device::where('serial_number', $serialNumber)->first();
         }
+        if (!$device && $imei !== '') {
+            $device = Device::where('imei1', $imei)->orWhere('imei2', $imei)->first();
+        }
         if (!$device) {
-            $identifier = $assetTag ?: $serialNumber;
+            $identifier = $assetTag ?: $serialNumber ?: $imei;
             $this->errors[] = "Row {$rowIndex}: Device '{$identifier}' not found — skipped.";
             $this->skippedCount++;
             return;
@@ -110,35 +113,17 @@ class BulkDeviceAssignImport implements OnEachRow, WithChunkReading, WithHeading
                             : 'good';
 
         try {
-            DeviceHandover::create([
-                'handover_number'       => 'HO-' . strtoupper(Str::random(8)),
-                'device_id'             => $device->id,
-                'employee_id'           => $employee->id,
-                'client_id'             => $clientId,
-                'handed_over_by'        => $this->handedOverBy,
-                'handover_date'         => $handoverDate,
-                'handover_location'     => trim($data['handover_location'] ?? '') ?: null,
-                'handover_city'         => trim($data['handover_city']     ?? '') ?: null,
-                'condition_at_handover' => $condition,
-                'accessories_handed'    => trim($data['accessories']       ?? '') ?: null,
-                'remarks'               => trim($data['remarks']           ?? '') ?: null,
-                'status'                => 'assigned',
-            ]);
-
-            $device->update([
-                'lifecycle_status'    => 'assigned',
-                'current_employee_id' => $employee->id,
-                'client_id'           => $clientId ?? $device->client_id,
-            ]);
-
-            OwnershipHistory::create([
-                'device_id'       => $device->id,
-                'employee_id'     => $employee->id,
-                'client_id'       => $clientId,
-                'ownership_type'  => 'employee',
-                'from_date'       => now(),
-                'transfer_reason' => 'Bulk device assignment',
-                'transferred_by'  => $this->handedOverBy,
+            DeviceAssignmentService::assign($device, $employee, [
+                'client_id'          => $clientId,
+                'handed_over_by'     => $this->handedOverBy,
+                'handover_date'      => $handoverDate,
+                'handover_location'  => trim($data['handover_location'] ?? '') ?: null,
+                'handover_city'      => trim($data['handover_city']     ?? '') ?: null,
+                'condition'          => $condition,
+                'accessories'        => trim($data['accessories']       ?? '') ?: null,
+                'remarks'            => trim($data['remarks']           ?? '') ?: null,
+                'group'              => $group ?: null,
+                'transfer_reason'    => 'Bulk device assignment',
             ]);
 
             $this->assignedCount++;
