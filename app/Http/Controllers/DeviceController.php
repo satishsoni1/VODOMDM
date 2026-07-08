@@ -130,7 +130,7 @@ class DeviceController extends Controller
     public function labels(Request $request)
     {
         if ($request->boolean('all')) {
-            $query = Device::with('model.brand')->orderBy('asset_tag');
+            $query = Device::with(['model.brand', 'currentEmployee'])->orderBy('asset_tag');
 
             if ($request->filled('q')) {
                 $q = $request->q;
@@ -148,7 +148,7 @@ class DeviceController extends Controller
 
             $devices = $query->get();
         } else {
-            $devices = Device::with('model.brand')
+            $devices = Device::with(['model.brand', 'currentEmployee'])
                 ->whereIn('id', $request->input('device_ids', []))
                 ->orderBy('asset_tag')
                 ->get();

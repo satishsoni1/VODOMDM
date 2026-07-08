@@ -81,7 +81,18 @@
             <div class="card-header"><strong>QR Scan Label</strong></div>
             <div class="card-body text-center">
                 <img src="{{ route('devices.qr', $device) }}" alt="Device QR Code" class="img-fluid mb-2" style="max-width:160px" id="qr-image">
-                <div class="font-monospace small text-muted mb-2">{{ $device->asset_tag }}</div>
+                <div class="font-monospace small text-muted">{{ $device->asset_tag }}</div>
+                @if($device->imei1)
+                    <div class="font-monospace small text-muted">IMEI: {{ $device->imei1 }}</div>
+                @endif
+                @if($device->currentEmployee)
+                    <div class="small text-muted mb-2">
+                        {{ $device->currentEmployee->name }}
+                        <span class="font-monospace">({{ $device->currentEmployee->employee_code }})</span>
+                    </div>
+                @else
+                    <div class="mb-2"></div>
+                @endif
                 <div class="d-flex gap-2 justify-content-center">
                     <button type="button" class="btn btn-sm btn-outline-primary" onclick="printQrLabel()"><i class="bi bi-printer"></i> Print</button>
                     <a href="{{ route('devices.qr', $device) }}" download="qr-{{ $device->asset_tag }}.svg" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i> Download</a>
