@@ -16,6 +16,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RecoveryController;
 use App\Http\Controllers\RepairController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ScanHelpController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\ApiLogController;
@@ -39,6 +40,8 @@ Route::prefix('webhook/whatsapp')->name('whatsapp.webhook.')->group(function () 
 
 // ── Device QR Scan (public — no auth) ────────────────────────────────────────
 Route::middleware('throttle:30,1')->prefix('scan')->name('scan.')->group(function () {
+    Route::get('/', [DeviceScanController::class, 'search'])->name('search');
+    Route::post('/find', [DeviceScanController::class, 'find'])->name('find');
     Route::get('/{device:qr_token}', [DeviceScanController::class, 'show'])->name('show');
     Route::post('/{device:qr_token}/lookup-employee', [DeviceScanController::class, 'lookupEmployee'])->name('lookup-employee');
     Route::post('/{device:qr_token}/request-link', [DeviceScanController::class, 'requestLink'])->name('request-link');
@@ -139,6 +142,17 @@ Route::middleware(['auth', 'verified', 'redirect.client'])->group(function () {
         Route::get('/', [DeviceLinkRequestController::class, 'index'])->name('index');
         Route::post('/{linkRequest}/approve', [DeviceLinkRequestController::class, 'approve'])->name('approve');
         Route::post('/{linkRequest}/reject', [DeviceLinkRequestController::class, 'reject'])->name('reject');
+    });
+
+    // Scan Help Content (FAQs & videos shown on the public device scan page)
+    Route::prefix('scan-help')->name('scan-help.')->group(function () {
+        Route::get('/', [ScanHelpController::class, 'index'])->name('index');
+        Route::post('/faqs', [ScanHelpController::class, 'storeFaq'])->name('faqs.store');
+        Route::put('/faqs/{scanFaq}', [ScanHelpController::class, 'updateFaq'])->name('faqs.update');
+        Route::delete('/faqs/{scanFaq}', [ScanHelpController::class, 'destroyFaq'])->name('faqs.destroy');
+        Route::post('/videos', [ScanHelpController::class, 'storeVideo'])->name('videos.store');
+        Route::put('/videos/{scanHelpVideo}', [ScanHelpController::class, 'updateVideo'])->name('videos.update');
+        Route::delete('/videos/{scanHelpVideo}', [ScanHelpController::class, 'destroyVideo'])->name('videos.destroy');
     });
 
     // Dispatch

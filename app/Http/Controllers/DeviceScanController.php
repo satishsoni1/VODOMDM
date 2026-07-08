@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Device;
 use App\Models\DeviceLinkRequest;
 use App\Models\Employee;
+use App\Models\ScanFaq;
+use App\Models\ScanHelpVideo;
 use Illuminate\Http\Request;
 
 class DeviceScanController extends Controller
@@ -17,8 +19,54 @@ class DeviceScanController extends Controller
         ]);
 
         $pendingRequest = $device->linkRequests()->where('status', 'pending')->latest()->first();
+        $faqs = ScanFaq::active()->ordered()->get();
+        $videos = ScanHelpVideo::active()->ordered()->get();
 
-        return view('scan.show', compact('device', 'pendingRequest'));
+        return view('scan.show', compact('device', 'pendingRequest', 'faqs', 'videos'));
+    }
+
+    public function search()
+    {
+        $faqs = ScanFaq::active()->ordered()->get();
+        $videos = ScanHelpVideo::active()->ordered()->get();
+
+        return view('scan.search', compact('faqs', 'videos'));
+    }
+
+    public function find(Request $request)
+    {
+        $validated = $request->validate([
+            'query' => 'required|string|max:100',
+        ]);
+        $query = trim($validated['query']);
+
+        $device = Device::where('asset_tag', $query)
+            ->orWhere('serial_number', $query)
+            ->orWhere('imei1', $query)
+            ->orWhere('imei2', $query)
+            ->first();
+
+        if ($device) {
+            return redirect()->route('scan.show', ['device' => $device->qr_token]);
+        }
+
+        $employee = Employee::where('employee_code', $query)->first();
+
+        if (! $employee) {
+            return back()->withInput()->with('error', 'No device or employee found matching "'.$query.'".');
+        }
+
+        $devices = $employee->currentDevices()->with('model.brand')->get();
+
+        if ($devices->isEmpty()) {
+            return back()->withInput()->with('error', 'No devices are currently assigned to '.$employee->name.'.');
+        }
+
+        if ($devices->count() === 1) {
+            return redirect()->route('scan.show', ['device' => $devices->first()->qr_token]);
+        }
+
+        return view('scan.picker', ['employee' => $employee, 'devices' => $devices]);
     }
 
     public function lookupEmployee(Request $request, Device $device)
@@ -37,6 +85,7 @@ class DeviceScanController extends Controller
             'found' => true,
             'employee' => [
                 'name' => $employee->name,
+                'employee_code' => $employee->employee_code,
                 'designation' => $employee->designation,
                 'department' => $employee->department,
                 'client' => $employee->client?->name,

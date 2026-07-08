@@ -67,6 +67,13 @@
                     @endforeach
                 </select>
             </div>
+            <div class="col-md-3">
+                <select class="form-select form-select-sm" name="mdm_status">
+                    <option value="">All MDM Status</option>
+                    <option value="enrolled" {{ request('mdm_status') == 'enrolled' ? 'selected' : '' }}>Enrolled</option>
+                    <option value="not_enrolled" {{ request('mdm_status') == 'not_enrolled' ? 'selected' : '' }}>Not Enrolled</option>
+                </select>
+            </div>
             <div class="col-auto">
                 <button class="btn btn-sm btn-primary"><i class="bi bi-search"></i> Filter</button>
                 <a href="{{ route('devices.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>

@@ -88,6 +88,9 @@
         <a href="{{ route('link-requests.index') }}" class="nav-link {{ request()->routeIs('link-requests.*') ? 'active' : '' }}">
             <i class="bi bi-qr-code-scan"></i> QR Link Requests
         </a>
+        <a href="{{ route('scan-help.index') }}" class="nav-link {{ request()->routeIs('scan-help.*') ? 'active' : '' }}">
+            <i class="bi bi-question-circle"></i> Scan Help Content
+        </a>
         <a href="{{ route('clients.index') }}" class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}">
             <i class="bi bi-briefcase"></i> Clients
         </a>

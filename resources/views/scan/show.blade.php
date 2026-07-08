@@ -26,6 +26,7 @@
         <div class="card-body">
             <table class="table table-sm table-borderless mb-0">
                 <tr><td class="text-muted w-50">Name</td><td class="fw-semibold">{{ $device->currentEmployee->name }}</td></tr>
+                <tr><td class="text-muted">Employee Code</td><td class="font-monospace">{{ $device->currentEmployee->employee_code ?? '—' }}</td></tr>
                 <tr><td class="text-muted">Designation</td><td>{{ $device->currentEmployee->designation ?? '—' }}</td></tr>
                 <tr><td class="text-muted">Department</td><td>{{ $device->currentEmployee->department ?? '—' }}</td></tr>
                 <tr><td class="text-muted">Client</td><td>{{ $device->client?->name ?? '—' }}</td></tr>
@@ -82,6 +83,7 @@
         <div class="card-body">
             <table class="table table-sm table-borderless mb-3">
                 <tr><td class="text-muted w-50">Name</td><td class="fw-semibold" id="confirm-name"></td></tr>
+                <tr><td class="text-muted">Employee Code</td><td class="font-monospace" id="confirm-code"></td></tr>
                 <tr><td class="text-muted">Designation</td><td id="confirm-designation"></td></tr>
                 <tr><td class="text-muted">Department</td><td id="confirm-department"></td></tr>
                 <tr><td class="text-muted">Client</td><td id="confirm-client"></td></tr>
@@ -102,6 +104,8 @@
         </div>
     </div>
 @endif
+
+@include('scan._help')
 
 @endsection
 
@@ -143,6 +147,7 @@
             }
 
             document.getElementById('confirm-name').textContent = data.employee.name || '—';
+            document.getElementById('confirm-code').textContent = data.employee.employee_code || '—';
             document.getElementById('confirm-designation').textContent = data.employee.designation || '—';
             document.getElementById('confirm-department').textContent = data.employee.department || '—';
             document.getElementById('confirm-client').textContent = data.employee.client || '—';

@@ -36,6 +36,14 @@ class DeviceController extends Controller
             $query->where('client_id', $request->client_id);
         }
 
+        if ($request->filled('mdm_status')) {
+            if ($request->mdm_status === 'enrolled') {
+                $query->whereHas('mdmDevice');
+            } elseif ($request->mdm_status === 'not_enrolled') {
+                $query->whereDoesntHave('mdmDevice');
+            }
+        }
+
         $devices = $query->paginate(25)->withQueryString();
 
         return view('devices.index', compact('devices'));
