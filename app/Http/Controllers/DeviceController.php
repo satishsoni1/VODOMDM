@@ -19,17 +19,18 @@ class DeviceController extends Controller
             ->orderBy('created_at', 'desc');
 
         if ($request->filled('q')) {
-            $q = $request->q;
-            $query->where(function ($sub) use ($q) {
-                $sub->where('serial_number', 'like', "%$q%")
-                    ->orWhere('asset_tag', 'like', "%$q%")
-                    ->orWhere('imei1', 'like', "%$q%")
-                    ->orWhere('imei2', 'like', "%$q%")
-                    ->orWhereHas('latestHandover', function ($handover) use ($q) {
-                        $handover->where('handover_location', 'like', "%{$q}%");
-                    });
+    $q = trim($request->q);
+
+    $query->where(function ($sub) use ($q) {
+        $sub->where('serial_number', 'like', "%{$q}%")
+            ->orWhere('asset_tag', 'like', "%{$q}%")
+            ->orWhere('imei1', 'like', "%{$q}%")
+            ->orWhere('imei2', 'like', "%{$q}%")
+            ->orWhereHas('latestHandover', function ($handover) use ($q) {
+                $handover->where('handover_location', 'like', "%{$q}%");
             });
-        }
+    });
+}
 
         if ($request->filled('status')) {
             $query->where('lifecycle_status', $request->status);
