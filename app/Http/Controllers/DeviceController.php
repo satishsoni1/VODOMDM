@@ -134,15 +134,18 @@ class DeviceController extends Controller
     public function labels(Request $request)
     {
         if ($request->boolean('all')) {
-            $query = Device::with(['model.brand', 'currentEmployee'])->orderBy('asset_tag');
+            $query = Device::with(['model.brand', 'currentEmployee', 'latestHandover'])->orderBy('asset_tag');
 
+            
             if ($request->filled('q')) {
                 $q = $request->q;
+                
                 $query->where(function ($sub) use ($q) {
                     $sub->where('serial_number', 'like', "%$q%")
                         ->orWhere('asset_tag', 'like', "%$q%")
                         ->orWhere('imei1', 'like', "%$q%")
-                        ->orWhere('imei2', 'like', "%$q%");
+                        ->orWhere('imei2', 'like', "%$q%")
+                        ->orWhere('latestHandover.handover_location', 'like', "%$q%");
                 });
             }
 
