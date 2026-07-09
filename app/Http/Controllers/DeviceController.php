@@ -25,7 +25,9 @@ class DeviceController extends Controller
                     ->orWhere('asset_tag', 'like', "%$q%")
                     ->orWhere('imei1', 'like', "%$q%")
                     ->orWhere('imei2', 'like', "%$q%")
-                    ->orWhere('handover_location', 'like', "%$q%");
+                    ->orWhereHas('latestHandover', function ($handover) use ($q) {
+                        $handover->where('handover_location', 'like', "%{$q}%");
+                    });
             });
         }
 
