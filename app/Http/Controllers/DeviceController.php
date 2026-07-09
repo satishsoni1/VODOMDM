@@ -15,7 +15,7 @@ class DeviceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Device::with(['model.brand', 'currentEmployee', 'client', 'currentLocation', 'mdmDevice'])
+        $query = Device::with(['model.brand', 'currentEmployee', 'client', 'currentLocation', 'mdmDevice','latestHandover'])
             ->orderBy('created_at', 'desc');
 
         if ($request->filled('q')) {
@@ -24,7 +24,8 @@ class DeviceController extends Controller
                 $sub->where('serial_number', 'like', "%$q%")
                     ->orWhere('asset_tag', 'like', "%$q%")
                     ->orWhere('imei1', 'like', "%$q%")
-                    ->orWhere('imei2', 'like', "%$q%");
+                    ->orWhere('imei2', 'like', "%$q%")
+                    ->orWhere('handover_location', 'like', "%$q%");
             });
         }
 
