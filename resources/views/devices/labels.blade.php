@@ -27,7 +27,7 @@
         .label img { width: 30mm; height: 30mm; }
         .label .asset-tag { font-family: 'Courier New', monospace; font-weight: 700; font-size: 3.2mm; margin-top: 1mm; }
         .label .serial { font-size: 2.4mm; color: #666; }
-        .label .imei { font-size: 2.2mm; color: #666; }
+        .label .imei { font-size: 4mm; color: #666; }
         .label .brand { font-size: 2.2mm; color: #1a8a7c; letter-spacing: .3px; }
         .label .employee { font-size: 2.2mm; color: #333; margin-top: .5mm; }
         .label .employee .code { font-family: 'Courier New', monospace; color: #666; }
