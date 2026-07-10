@@ -5,6 +5,10 @@
     <li class="breadcrumb-item active">New Handover</li>
 @endsection
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
+@endpush
+
 @section('content')
 <div class="row justify-content-center"><div class="col-xl-8">
 <div class="card">
@@ -16,19 +20,32 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">Device *</label>
-                    <select class="form-select @error('device_id') is-invalid @enderror" name="device_id" required>
+                    <select class="form-select @error('device_id') is-invalid @enderror" name="device_id" id="deviceSelect" required>
                         <option value="">— Select Device —</option>
                         @foreach($devices as $dev)
-                        <option value="{{ $dev->id }}" {{ old('device_id')==$dev->id?'selected':'' }}>
+                        <option value="{{ $dev->id }}"
+                            data-serial="{{ $dev->serial_number }}"
+                            data-imei="{{ $dev->imei1 }}"
+                            {{ old('device_id')==$dev->id?'selected':'' }}>
                             {{ $dev->asset_tag }} — {{ $dev->model?->brand?->name }} {{ $dev->model?->model_name }}
+                            @if($dev->serial_number) | S/N: {{ $dev->serial_number }} @endif
+                            @if($dev->imei1) | IMEI: {{ $dev->imei1 }} @endif
                         </option>
                         @endforeach
                     </select>
                     @error('device_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
+                <div class="col-md-3">
+                    <label class="form-label">Serial Number</label>
+                    <input type="text" class="form-control" id="deviceSerial" readonly tabindex="-1">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">IMEI</label>
+                    <input type="text" class="form-control" id="deviceImei" readonly tabindex="-1">
+                </div>
                 <div class="col-md-6">
                     <label class="form-label">Employee *</label>
-                    <select class="form-select @error('employee_id') is-invalid @enderror" name="employee_id" required>
+                    <select class="form-select @error('employee_id') is-invalid @enderror" name="employee_id" id="employeeSelect" required>
                         <option value="">— Select Employee —</option>
                         @foreach($employees as $emp)
                         <option value="{{ $emp->id }}" {{ old('employee_id')==$emp->id?'selected':'' }}>
@@ -99,6 +116,7 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
 <script>
 function filterProjects(sel) {
     const cid = sel.value;
@@ -107,5 +125,29 @@ function filterProjects(sel) {
     });
     document.getElementById('projectSelect').value = '';
 }
+
+function updateDeviceInfo(deviceId) {
+    const opt = document.querySelector(`#deviceSelect option[value="${deviceId}"]`);
+    document.getElementById('deviceSerial').value = opt?.dataset.serial ?? '';
+    document.getElementById('deviceImei').value = opt?.dataset.imei ?? '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const deviceChoices = new Choices('#deviceSelect', {
+        searchEnabled: true,
+        searchPlaceholderValue: 'Search asset tag, serial, IMEI…',
+        itemSelectText: '',
+        shouldSort: false,
+    });
+    const employeeChoices = new Choices('#employeeSelect', {
+        searchEnabled: true,
+        searchPlaceholderValue: 'Search employee name or code…',
+        itemSelectText: '',
+        shouldSort: false,
+    });
+
+    document.getElementById('deviceSelect').addEventListener('change', e => updateDeviceInfo(e.target.value));
+    updateDeviceInfo(document.getElementById('deviceSelect').value);
+});
 </script>
 @endpush

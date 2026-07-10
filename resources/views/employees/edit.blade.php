@@ -66,6 +66,7 @@
     <div class="col-md-4"><label class="form-label">Business Area</label><input class="form-control" name="business_area" value="{{ ev('business_area',$employee) }}"></div>
     <div class="col-md-2"><label class="form-label">Position ID</label><input class="form-control" name="position_id" value="{{ ev('position_id',$employee) }}"></div>
     <div class="col-md-2 d-flex align-items-end pb-1">
+        <input type="hidden" name="is_manager" value="0">
         <div class="form-check">
             <input class="form-check-input" type="checkbox" name="is_manager" value="1" id="isManager" {{ ev('is_manager',$employee) ? 'checked' : '' }}>
             <label class="form-check-label" for="isManager">Is Manager</label>
@@ -278,6 +279,7 @@
     <div class="col-md-3"><label class="form-label">TAG</label><input class="form-control" name="tag" value="{{ ev('tag',$employee) }}"></div>
     <div class="col-md-3"><label class="form-label">Previous Experience</label><input class="form-control" name="previous_experience" value="{{ ev('previous_experience',$employee) }}"></div>
     <div class="col-md-3 d-flex align-items-end pb-1">
+        <input type="hidden" name="direct_reports_flag" value="0">
         <div class="form-check">
             <input class="form-check-input" type="checkbox" name="direct_reports_flag" value="1" id="drFlag" {{ ev('direct_reports_flag',$employee) ? 'checked' : '' }}>
             <label class="form-check-label" for="drFlag">Direct Reports Location Flag</label>
@@ -354,16 +356,16 @@
 </div>
 
 </div>{{-- end tab-content --}}
+</form>
 
 <div class="d-flex gap-2 mt-3">
-    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Update Employee</button>
+    <button type="submit" form="empForm" class="btn btn-primary"><i class="bi bi-check-lg"></i> Update Employee</button>
     <a href="{{ route('employees.show',$employee) }}" class="btn btn-outline-secondary">Cancel</a>
     <form method="POST" action="{{ route('employees.destroy',$employee) }}" class="ms-auto" onsubmit="return confirm('Delete this employee?')">
         @csrf @method('DELETE')
         <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i> Delete</button>
     </form>
 </div>
-</form>
 @endsection
 
 @push('scripts')
