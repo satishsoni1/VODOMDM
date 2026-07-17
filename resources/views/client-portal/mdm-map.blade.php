@@ -1,9 +1,6 @@
-@extends('layouts.main')
-@section('title','Device Map')
-@section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('mdm.index') }}">MDM</a></li>
-    <li class="breadcrumb-item active">Device Map</li>
-@endsection
+@extends('client-portal.layout')
+@section('title','MDM Device Map')
+@section('page-title','MDM Device Map')
 
 @push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -26,7 +23,7 @@
 /* ── Map outer ──────────────────────────────────────────────────────────────── */
 #mapOuter {
     position:relative;
-    height:calc(100vh - 215px); min-height:520px;
+    height:calc(100vh - 240px); min-height:520px;
     border-radius:10px; overflow:hidden;
     box-shadow:0 2px 18px rgba(0,0,0,.12);
 }
@@ -130,6 +127,16 @@
 @section('content')
 <div class="map-page">
 
+@if(empty($configs))
+<div class="card border-0 shadow-sm">
+    <div class="card-body text-center py-5 text-muted">
+        <i class="bi bi-gear fs-1 d-block mb-2 opacity-25"></i>
+        No MDM configuration has been assigned to your account yet.<br>
+        Please contact your account manager.
+    </div>
+</div>
+@else
+
 {{-- ── Filter bar (all client-side) ────────────────────────────────────────── --}}
 <div class="map-filter-bar">
 
@@ -163,14 +170,6 @@
         @endforeach
     </select>
 
-    {{-- Client --}}
-    <select id="fClient" class="form-select form-select-sm" style="width:160px">
-        <option value="">All Clients</option>
-        @foreach($clients as $c)
-        <option value="{{ $c['id'] }}">{{ $c['name'] }}</option>
-        @endforeach
-    </select>
-
     {{-- Linked --}}
     <select id="fLinked" class="form-select form-select-sm" style="width:135px">
         <option value="">All Devices</option>
@@ -197,7 +196,7 @@
             <i class="bi bi-geo-alt-fill me-1"></i>
             <span id="fTotal">{{ $total }}</span> shown
         </span>
-        <a href="{{ route('mdm.devices') }}" class="btn btn-sm btn-outline-secondary">
+        <a href="{{ route('client.mdm-devices') }}" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-table me-1"></i>List
         </a>
     </div>
@@ -275,9 +274,11 @@
     </div>
 </div>
 
+@endif
 </div>{{-- .map-page --}}
 @endsection
 
+@if(!empty($configs))
 <script id="mdm-map-data" type="application/json">{!! json_encode($mapData) !!}</script>
 
 @push('scripts')
@@ -299,8 +300,7 @@ DEVICES.forEach(function (d) {
         (d.config   || '') + ' ' +
         (d.imei     || '') + ' ' +
         (d.serial   || '') + ' ' +
-        (d.employee ? d.employee.name + ' ' + (d.employee.code || '') : '') + ' ' +
-        (d.client   ? d.client.name : '')
+        (d.employee ? d.employee.name + ' ' + (d.employee.code || '') : '')
     ).toLowerCase();
 });
 
@@ -386,11 +386,6 @@ function makePopup(d) {
             + '</div>'
         : '<div class="p-emp" style="color:#bbb"><i class="bi bi-person"></i> Not linked</div>';
 
-    // Client row
-    var clientRow = d.client
-        ? '<div class="p-row"><i class="bi bi-building"></i>' + esc(d.client.name) + '</div>'
-        : '';
-
     // Sync time
     var syncRow = d.sync_ts
         ? '<div class="p-row"><i class="bi bi-clock-history"></i>' + esc(d.sync_ts) + ' <span style="color:#bbb">(' + esc(d.sync_age) + ')</span></div>'
@@ -409,7 +404,6 @@ function makePopup(d) {
         + '<div class="p-sub">' + esc(d.model || '—') + (d.group ? ' &bull; ' + esc(d.group) : '') + '</div>'
         + '<div class="p-tags">' + statusTag + cfgTag + battTag + '</div>'
         + empRow
-        + clientRow
         + syncRow
         + androidRow
         + geoRow
@@ -475,11 +469,10 @@ function applyFilters() {
     var status = document.getElementById('fStatus').value;
     var group  = document.getElementById('fGroup').value;
     var config = document.getElementById('fConfig').value;
-    var client = document.getElementById('fClient').value;
     var linked = document.getElementById('fLinked').value;
     var search = (document.getElementById('fSearch').value || '').toLowerCase().trim();
     var side   = (document.getElementById('sideSearch').value || '').toLowerCase().trim();
-    var active = !!(status || group || config || client || linked || search || side);
+    var active = !!(status || group || config || linked || search || side);
 
     document.getElementById('fClear').classList.toggle('d-none', !active);
 
@@ -492,7 +485,6 @@ function applyFilters() {
         if (status === 'off' && d.online)   pass = false;
         if (group  && d.group !== group)    pass = false;
         if (config && d.config !== config)  pass = false;
-        if (client && (!d.client || String(d.client.id) !== client)) pass = false;
         if (linked === 'yes' && !d.linked)  pass = false;
         if (linked === 'no'  && d.linked)   pass = false;
         if (search && !d.q.includes(search)) pass = false;
@@ -519,7 +511,7 @@ function applyFilters() {
     document.getElementById('oTotal').textContent    = shown;
 }
 
-['fStatus','fGroup','fConfig','fClient','fLinked'].forEach(function (id) {
+['fStatus','fGroup','fConfig','fLinked'].forEach(function (id) {
     document.getElementById(id).addEventListener('change', applyFilters);
 });
 document.getElementById('fSearch').addEventListener('input', applyFilters);
@@ -529,7 +521,6 @@ document.getElementById('fClear').addEventListener('click', function () {
     document.getElementById('fStatus').value  = '';
     document.getElementById('fGroup').value   = '';
     document.getElementById('fConfig').value  = '';
-    document.getElementById('fClient').value  = '';
     document.getElementById('fLinked').value  = '';
     document.getElementById('fSearch').value  = '';
     document.getElementById('sideSearch').value = '';
@@ -598,3 +589,4 @@ function esc(s) {
 })();
 </script>
 @endpush
+@endif

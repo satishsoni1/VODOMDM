@@ -258,7 +258,7 @@ class MdmController extends Controller
     // ── GPS Map ───────────────────────────────────────────────────────────────
     public function map(Request $request)
     {
-        $q = MdmDevice::with(['employee', 'locationLatest', 'hardware'])
+        $q = MdmDevice::with(['employee.client', 'locationLatest', 'hardware'])
             ->where(function ($q) {
                 // GPS in main device row OR in the normalized location_latest table
                 $q->where(function ($inner) {
@@ -268,12 +268,17 @@ class MdmController extends Controller
                 });
             });
 
-        if ($request->filled('status')) $q->where('device_status', $request->status);
-        if ($request->filled('group'))  $q->where('mdm_group', $request->group);
+        if ($request->filled('status'))        $q->where('device_status', $request->status);
+        if ($request->filled('group'))         $q->where('mdm_group', $request->group);
+        if ($request->filled('configuration')) $q->where('configuration', $request->configuration);
         if ($request->filled('linked')) {
             $request->linked === 'yes'
                 ? $q->whereNotNull('local_employee_id')
                 : $q->whereNull('local_employee_id');
+        }
+        if ($request->filled('client')) {
+            $clientId = $request->client;
+            $q->whereHas('employee', fn ($eq) => $eq->where('client_id', $clientId));
         }
 
         $devices = $q->orderByDesc('sync_time')->limit(5000)->get();
@@ -302,13 +307,19 @@ class MdmController extends Controller
                 'desig' => $d->employee->designation,
                 'phone' => $d->employee->phone,
             ] : null,
+            'client' => $d->employee?->client ? [
+                'id'   => $d->employee->client->id,
+                'name' => $d->employee->client->name,
+            ] : null,
         ])->filter(fn ($d) => $d['lat'] && $d['lng'])->values();
 
-        $groups = MdmDevice::whereNotNull('mdm_group')->distinct()->orderBy('mdm_group')->pluck('mdm_group');
-        $total  = $mapData->count();
-        $online = $devices->filter(fn ($d) => $d->isOnline())->count();
+        $groups  = MdmDevice::whereNotNull('mdm_group')->distinct()->orderBy('mdm_group')->pluck('mdm_group');
+        $configs = $mapData->pluck('config')->filter()->unique()->sort()->values();
+        $clients = $mapData->pluck('client')->filter()->unique('id')->sortBy('name')->values();
+        $total   = $mapData->count();
+        $online  = $devices->filter(fn ($d) => $d->isOnline())->count();
 
-        return view('mdm.map', compact('mapData', 'groups', 'total', 'online'));
+        return view('mdm.map', compact('mapData', 'groups', 'configs', 'clients', 'total', 'online'));
     }
 
     // ── Internal helpers ──────────────────────────────────────────────────────

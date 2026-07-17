@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ClientMdmConfiguration;
 use App\Models\Device;
 use App\Models\Employee;
+use App\Models\MdmDevice;
 use App\Models\MdmPortalDevice;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
@@ -14,6 +16,12 @@ class ClientPortalController extends Controller
     private function clientId(): int
     {
         return (int) request()->user()->client_id;
+    }
+
+    private function assignedConfigurations(): array
+    {
+        return ClientMdmConfiguration::where('client_id', $this->clientId())
+            ->pluck('configuration')->toArray();
     }
 
     // ── Dashboard ─────────────────────────────────────────────────────────────
@@ -180,5 +188,104 @@ class ClientPortalController extends Controller
             ->paginate(20)->withQueryString();
 
         return view('client-portal.tickets', compact('tickets'));
+    }
+
+    // ── MDM Device Map (scoped to assigned configurations) ──────────────────────
+    public function mdmMap(Request $request)
+    {
+        $configs = $this->assignedConfigurations();
+
+        $q = MdmDevice::with(['employee', 'locationLatest', 'hardware'])
+            ->whereIn('configuration', $configs)
+            ->where(function ($q) {
+                $q->where(function ($inner) {
+                    $inner->whereNotNull('latitude')->where('latitude', '!=', 0);
+                })->orWhereHas('locationLatest', function ($inner) {
+                    $inner->whereNotNull('latitude')->where('latitude', '!=', 0);
+                });
+            });
+
+        if ($request->filled('status'))        $q->where('device_status', $request->status);
+        if ($request->filled('group'))         $q->where('mdm_group', $request->group);
+        if ($request->filled('configuration')) $q->where('configuration', $request->configuration);
+        if ($request->filled('linked')) {
+            $request->linked === 'yes'
+                ? $q->whereNotNull('local_employee_id')
+                : $q->whereNull('local_employee_id');
+        }
+
+        $devices = $q->orderByDesc('sync_time')->limit(5000)->get();
+
+        $mapData = $devices->map(fn ($d) => [
+            'id'       => $d->id,
+            'number'   => $d->pg_number,
+            'model'    => $d->model,
+            'serial'   => $d->serial_number,
+            'imei'     => $d->imei,
+            'status'   => $d->device_status,
+            'online'   => $d->isOnline(),
+            'group'    => $d->mdm_group,
+            'config'   => $d->configuration ?: null,
+            'battery'  => $d->batteryLevel(),
+            'android'  => $d->android_version ?: null,
+            'ip'       => $d->ip_address,
+            'sync_age' => $d->syncAgeLabel(),
+            'sync_ts'  => $d->sync_time?->format('d M Y, H:i'),
+            'lat'      => (float) ($d->locationLatest?->latitude ?? $d->latitude),
+            'lng'      => (float) ($d->locationLatest?->longitude ?? $d->longitude),
+            'url'      => route('client.mdm-devices.show', $d),
+            'employee' => $d->employee ? [
+                'name'  => $d->employee->name,
+                'code'  => $d->employee->employee_code,
+                'desig' => $d->employee->designation,
+                'phone' => $d->employee->phone,
+            ] : null,
+        ])->filter(fn ($d) => $d['lat'] && $d['lng'])->values();
+
+        $groups = MdmDevice::whereIn('configuration', $configs)
+            ->whereNotNull('mdm_group')->distinct()->orderBy('mdm_group')->pluck('mdm_group');
+        $total  = $mapData->count();
+        $online = $devices->filter(fn ($d) => $d->isOnline())->count();
+
+        return view('client-portal.mdm-map', compact('mapData', 'groups', 'configs', 'total', 'online'));
+    }
+
+    // ── MDM Device List (scoped to assigned configurations) ─────────────────────
+    public function mdmDevices(Request $request)
+    {
+        $configs = $this->assignedConfigurations();
+
+        $q = MdmDevice::with(['employee', 'hardware', 'locationLatest'])
+            ->whereIn('configuration', $configs);
+
+        if ($request->filled('status')) $q->where('device_status', $request->status);
+        if ($request->filled('group'))  $q->where('mdm_group', $request->group);
+        if ($request->filled('q')) {
+            $search = $request->q;
+            $q->where(function ($sub) use ($search) {
+                $sub->where('pg_number', 'LIKE', "%{$search}%")
+                    ->orWhere('imei', 'LIKE', "%{$search}%")
+                    ->orWhere('serial_number', 'LIKE', "%{$search}%")
+                    ->orWhere('model', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $devices = $q->orderByDesc('sync_time')->paginate(20)->withQueryString();
+        $groups  = MdmDevice::whereIn('configuration', $configs)
+            ->whereNotNull('mdm_group')->distinct()->orderBy('mdm_group')->pluck('mdm_group');
+
+        return view('client-portal.mdm-devices', compact('devices', 'groups', 'configs'));
+    }
+
+    // ── MDM Device Detail (scoped to assigned configurations) ───────────────────
+    public function mdmShow(MdmDevice $mdm)
+    {
+        if (! in_array($mdm->configuration, $this->assignedConfigurations())) {
+            abort(403, 'Device does not belong to your account.');
+        }
+
+        $mdm->load(['hardware', 'locationLatest', 'employee']);
+
+        return view('client-portal.mdm-show', compact('mdm'));
     }
 }

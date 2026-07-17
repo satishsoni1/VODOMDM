@@ -20,6 +20,7 @@ use App\Http\Controllers\ScanHelpController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\ApiLogController;
+use App\Http\Controllers\ClientMdmConfigController;
 use App\Http\Controllers\ClientPortalController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\MdmController;
@@ -54,6 +55,10 @@ Route::middleware(['auth', 'client'])->prefix('client-portal')->name('client.')-
     Route::get('/devices/{device}', [ClientPortalController::class, 'show'])->name('devices.show');
     Route::get('/employees', [ClientPortalController::class, 'employees'])->name('employees');
     Route::get('/tickets',   [ClientPortalController::class, 'tickets'])->name('tickets');
+
+    Route::get('/mdm-map',              [ClientPortalController::class, 'mdmMap'])->name('mdm-map');
+    Route::get('/mdm-devices',          [ClientPortalController::class, 'mdmDevices'])->name('mdm-devices');
+    Route::get('/mdm-devices/{mdm}',    [ClientPortalController::class, 'mdmShow'])->name('mdm-devices.show');
 });
 
 // ── Admin / Staff ─────────────────────────────────────────────────────────────
@@ -193,6 +198,13 @@ Route::middleware(['auth', 'verified', 'redirect.client'])->group(function () {
 
     // Client Portal User Management
     Route::resource('client-users', ClientUserController::class)->except(['show']);
+
+    // Client MDM Configuration Assignment
+    Route::prefix('client-mdm-configs')->name('client-mdm-configs.')->group(function () {
+        Route::get('/',                   [ClientMdmConfigController::class, 'index'])->name('index');
+        Route::get('/{client}/edit',      [ClientMdmConfigController::class, 'edit'])->name('edit');
+        Route::put('/{client}',           [ClientMdmConfigController::class, 'update'])->name('update');
+    });
 
     // WhatsApp Messaging
     Route::prefix('whatsapp')->name('whatsapp.')->group(function () {

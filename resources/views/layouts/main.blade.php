@@ -130,6 +130,9 @@
         <a href="{{ route('mdm.map') }}" class="nav-link {{ request()->routeIs('mdm.map') ? 'active' : '' }}">
             <i class="bi bi-geo-alt-fill"></i> Device Map
         </a>
+        <a href="{{ route('client-mdm-configs.index') }}" class="nav-link {{ request()->routeIs('client-mdm-configs.*') ? 'active' : '' }}">
+            <i class="bi bi-diagram-2"></i> Client Configurations
+        </a>
 
         <div class="nav-section">Analytics</div>
         <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">

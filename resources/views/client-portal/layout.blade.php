@@ -110,6 +110,12 @@
         <a href="{{ route('client.devices') }}" class="cp-nav-link {{ request()->routeIs('client.devices') || request()->routeIs('client.devices.show') ? 'active' : '' }}">
             <i class="bi bi-phone"></i> My Devices
         </a>
+        <a href="{{ route('client.mdm-map') }}" class="cp-nav-link {{ request()->routeIs('client.mdm-map') ? 'active' : '' }}">
+            <i class="bi bi-geo-alt-fill"></i> MDM Map
+        </a>
+        <a href="{{ route('client.mdm-devices') }}" class="cp-nav-link {{ request()->routeIs('client.mdm-devices') || request()->routeIs('client.mdm-devices.show') ? 'active' : '' }}">
+            <i class="bi bi-phone-fill"></i> MDM Devices
+        </a>
         <a href="{{ route('client.employees') }}" class="cp-nav-link {{ request()->routeIs('client.employees') ? 'active' : '' }}">
             <i class="bi bi-people"></i> Field Staff
         </a>

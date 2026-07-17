@@ -49,4 +49,9 @@ class Client extends Model
     {
         return $this->hasMany(RecoveryCase::class);
     }
+
+    public function mdmConfigurations(): HasMany
+    {
+        return $this->hasMany(ClientMdmConfiguration::class);
+    }
 }
