@@ -3,7 +3,7 @@
 @section('page-title', 'Device Detail')
 
 @section('content')
-@php $mdm = $device->mdmPortalDevice; @endphp
+@php $mdm = $device->mdmDevice; @endphp
 
 <div class="mb-3">
     <a href="{{ route('client.devices') }}" class="btn btn-sm btn-outline-secondary">
@@ -92,6 +92,9 @@
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header d-flex align-items-center gap-2" style="background:var(--gs-teal-light);border-bottom:1px solid #b2d8d4">
                 <strong style="color:var(--gs-teal-dark)"><i class="bi bi-phone-vibrate me-2"></i>MDM / Remote Status</strong>
+                <span class="badge bg-light text-secondary border" title="Matched to this device by Serial No. / IMEI">
+                    <i class="bi bi-link-45deg me-1"></i>Linked via Serial/IMEI
+                </span>
                 <span class="badge rounded-pill {{ $mdm->isOnline() ? 'badge-on' : 'badge-off' }} ms-auto">
                     <i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>
                     {{ $mdm->isOnline() ? 'Online' : 'Offline' }}
@@ -102,6 +105,10 @@
                     <div class="col-md-4">
                         <div class="text-muted">MDM Number</div>
                         <div class="fw-semibold font-monospace">{{ $mdm->mdm_number }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted">Battery</div>
+                        <div class="fw-semibold">{{ $mdm->batteryLevel() !== null ? $mdm->batteryLevel().'%' : '—' }}</div>
                     </div>
                     <div class="col-md-4">
                         <div class="text-muted">Group</div>
@@ -229,6 +236,32 @@
     {{-- ── Right: Employee + Tickets ──────────────────────────────────────── --}}
     <div class="col-xl-4">
 
+        {{-- QR Scan Label --}}
+        <div class="card border-0 shadow-sm mb-4" id="qr-card">
+            <div class="card-header" style="background:var(--gs-teal-light);border-bottom:1px solid #b2d8d4">
+                <strong style="color:var(--gs-teal-dark)"><i class="bi bi-qr-code me-2"></i>QR Scan Label</strong>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ route('client.devices.qr', $device) }}" alt="Device QR Code" class="img-fluid mb-2" style="max-width:160px" id="qr-image">
+                <div class="font-monospace small text-muted">{{ $device->asset_tag }}</div>
+                @if($device->imei1)
+                    <div class="font-monospace small text-muted">IMEI: {{ $device->imei1 }}</div>
+                @endif
+                @if($device->currentEmployee)
+                    <div class="small text-muted mb-2">
+                        {{ $device->currentEmployee->name }}
+                        <span class="font-monospace">({{ $device->currentEmployee->employee_code }})</span>
+                    </div>
+                @else
+                    <div class="mb-2"></div>
+                @endif
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="printQrLabel()"><i class="bi bi-printer"></i> Print</button>
+                    <a href="{{ route('client.devices.qr', $device) }}" download="qr-{{ $device->asset_tag }}.svg" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i> Download</a>
+                </div>
+            </div>
+        </div>
+
         {{-- Assigned Employee --}}
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header" style="background:var(--gs-teal-light);border-bottom:1px solid #b2d8d4">
@@ -283,3 +316,22 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+    @media print {
+        body * { visibility: hidden; }
+        #qr-card, #qr-card * { visibility: visible; }
+        #qr-card { position: fixed; top: 0; left: 0; width: 45mm; border: none; box-shadow: none; }
+        #qr-image { max-width: 40mm !important; }
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    function printQrLabel() {
+        window.print();
+    }
+</script>
+@endpush

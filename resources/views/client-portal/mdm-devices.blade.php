@@ -69,6 +69,7 @@
                 <thead>
                     <tr>
                         <th class="ps-3">Device #</th>
+                        <th>IMEI / Serial</th>
                         <th>Model</th>
                         <th>Configuration</th>
                         <th class="text-center">Status</th>
@@ -85,6 +86,12 @@
                                 {{ $d->pg_number }}
                             </a>
                         </td>
+                        <td>
+                            <div class="font-monospace small">{{ $d->imei ?: '—' }}</div>
+                            @if($d->serial_number)
+                            <div class="font-monospace text-muted" style="font-size:.7rem">{{ $d->serial_number }}</div>
+                            @endif
+                        </td>
                         <td>{{ $d->model ?? '—' }}</td>
                         <td class="text-muted small">{{ $d->configuration ?? '—' }}</td>
                         <td class="text-center">
@@ -95,9 +102,10 @@
                             @endif
                         </td>
                         <td>
-                            @if($d->employee)
-                                <div class="fw-semibold">{{ $d->employee->name }}</div>
-                                <div class="text-muted" style="font-size:.7rem">{{ $d->employee->employee_code }}</div>
+                            @php $emp = $d->resolvedEmployee(); @endphp
+                            @if($emp)
+                                <div class="fw-semibold">{{ $emp->name }}</div>
+                                <div class="text-muted" style="font-size:.7rem">{{ $emp->employee_code }}</div>
                             @else
                                 <span class="text-muted fst-italic">Not linked</span>
                             @endif

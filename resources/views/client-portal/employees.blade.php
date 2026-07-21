@@ -45,6 +45,7 @@
         $hasMdm  = $mdm !== null;
         $isOnline = $hasMdm && $mdm->isOnline();
         $borderColor = $isOnline ? '#1a8a7c' : ($hasMdm ? '#f07030' : '#dee2e6');
+        $device = $emp->currentDevices->first();
     @endphp
     <div class="col-md-6 col-xl-4">
         <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid {{ $borderColor }} !important">
@@ -92,6 +93,12 @@
                 <div class="rounded p-2 small bg-light text-muted text-center">
                     <i class="bi bi-phone-x me-1"></i>No MDM device
                 </div>
+                @endif
+
+                @if($device)
+                <a href="{{ route('client.devices.show', $device) }}" class="btn btn-sm w-100 mt-2 text-white" style="background:var(--gs-teal)">
+                    <i class="bi bi-qr-code me-1"></i>View Device / QR
+                </a>
                 @endif
             </div>
         </div>

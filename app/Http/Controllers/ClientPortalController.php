@@ -10,12 +10,25 @@ use App\Models\MdmPortalDevice;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class ClientPortalController extends Controller
 {
     private function clientId(): int
     {
         return (int) request()->user()->client_id;
+    }
+
+    private function assertBelongsToClient(Device $device): void
+    {
+        $clientId = $this->clientId();
+        $empIds   = Employee::where('client_id', $clientId)->pluck('id');
+
+        $belongsToClient = $device->client_id === $clientId
+            || in_array($device->current_employee_id, $empIds->toArray());
+        if (!$belongsToClient) {
+            abort(403, 'Device does not belong to your account.');
+        }
     }
 
     private function assignedConfigurations(): array
@@ -104,7 +117,7 @@ class ClientPortalController extends Controller
         $clientId = $this->clientId();
         $empIds   = Employee::where('client_id', $clientId)->pluck('id');
 
-        $query = Device::with(['model.brand', 'currentEmployee', 'mdmPortalDevice'])
+        $query = Device::with(['model.brand', 'currentEmployee', 'mdmDevice'])
             ->where(fn ($q) => $q->where('client_id', $clientId)->orWhereIn('current_employee_id', $empIds));
 
         if ($request->filled('q')) {
@@ -136,19 +149,22 @@ class ClientPortalController extends Controller
     // ── Device Detail ─────────────────────────────────────────────────────────
     public function show(Device $device)
     {
-        $clientId = $this->clientId();
-        $empIds   = Employee::where('client_id', $clientId)->pluck('id');
+        $this->assertBelongsToClient($device);
 
-        // Ensure device belongs to this client (tagged directly or via an employee)
-        $belongsToClient = $device->client_id === $clientId
-            || in_array($device->current_employee_id, $empIds->toArray());
-        if (!$belongsToClient) {
-            abort(403, 'Device does not belong to your account.');
-        }
-
-        $device->load(['model.brand', 'currentEmployee', 'mdmDevice', 'handovers.employee', 'tickets']);
+        $device->load(['model.brand', 'currentEmployee', 'mdmDevice.hardware', 'handovers.employee', 'tickets']);
 
         return view('client-portal.show', compact('device'));
+    }
+
+    // ── Device QR Code ────────────────────────────────────────────────────────
+    public function qrCode(Device $device)
+    {
+        $this->assertBelongsToClient($device);
+
+        $url = route('scan.show', ['device' => $device->qr_token]);
+        $svg = QrCode::format('svg')->size(400)->margin(1)->generate($url);
+
+        return response($svg, 200, ['Content-Type' => 'image/svg+xml']);
     }
 
     // ── Employees ─────────────────────────────────────────────────────────────
@@ -156,7 +172,7 @@ class ClientPortalController extends Controller
     {
         $clientId = $this->clientId();
 
-        $query = Employee::with(['mdmDevice'])
+        $query = Employee::with(['mdmDevice', 'currentDevices'])
             ->where('client_id', $clientId)
             ->orderBy('designation')->orderBy('name');
 

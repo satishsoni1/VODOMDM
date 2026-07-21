@@ -52,6 +52,7 @@ Route::middleware('throttle:30,1')->prefix('scan')->name('scan.')->group(functio
 Route::middleware(['auth', 'client'])->prefix('client-portal')->name('client.')->group(function () {
     Route::get('/',          [ClientPortalController::class, 'dashboard'])->name('dashboard');
     Route::get('/devices',   [ClientPortalController::class, 'devices'])->name('devices');
+    Route::get('/devices/{device}/qr', [ClientPortalController::class, 'qrCode'])->name('devices.qr');
     Route::get('/devices/{device}', [ClientPortalController::class, 'show'])->name('devices.show');
     Route::get('/employees', [ClientPortalController::class, 'employees'])->name('employees');
     Route::get('/tickets',   [ClientPortalController::class, 'tickets'])->name('tickets');

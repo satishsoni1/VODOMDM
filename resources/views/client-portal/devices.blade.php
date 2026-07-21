@@ -73,7 +73,7 @@
                 </thead>
                 <tbody>
                     @foreach($devices as $device)
-                    @php $mdm = $device->mdmPortalDevice; @endphp
+                    @php $mdm = $device->mdmDevice; @endphp
                     <tr>
                         <td class="ps-3">
                             <div class="fw-semibold" style="color:var(--gs-teal-dark)">{{ $device->model?->name ?? '—' }}</div>
@@ -100,13 +100,16 @@
                                     <i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>
                                     {{ $mdm->isOnline() ? 'Online' : 'Offline' }}
                                 </span>
+                                <span class="badge bg-light text-secondary border ms-1" title="Matched by Serial No. / IMEI">
+                                    <i class="bi bi-link-45deg"></i> Linked
+                                </span>
                                 @if(!$mdm->isPermissionCompliant())
                                 <span class="badge bg-warning-subtle text-warning border ms-1" title="{{ $mdm->permission_status }}">
                                     <i class="bi bi-shield-exclamation"></i>
                                 </span>
                                 @endif
                             @else
-                                <span class="text-muted small">—</span>
+                                <span class="badge bg-light text-muted border">Not Enrolled</span>
                             @endif
                         </td>
                         <td class="small">

@@ -5,6 +5,7 @@
 @php
     $lat = $mdm->locationLatest?->latitude ?? $mdm->latitude;
     $lng = $mdm->locationLatest?->longitude ?? $mdm->longitude;
+    $resolvedEmployee = $mdm->resolvedEmployee();
 @endphp
 
 @section('content')
@@ -75,13 +76,16 @@
                 <strong style="color:var(--gs-teal-dark)"><i class="bi bi-person me-2"></i>Assigned Employee</strong>
             </div>
             <div class="card-body">
-                @if($mdm->employee)
+                @if($resolvedEmployee)
                 <table class="table table-sm mb-0">
-                    <tr><td class="text-muted">Name</td><td class="fw-semibold">{{ $mdm->employee->name }}</td></tr>
-                    <tr><td class="text-muted">Code</td><td>{{ $mdm->employee->employee_code ?? '—' }}</td></tr>
-                    <tr><td class="text-muted">Designation</td><td>{{ $mdm->employee->designation ?? '—' }}</td></tr>
-                    <tr><td class="text-muted">Phone</td><td>{{ $mdm->employee->phone ?? '—' }}</td></tr>
+                    <tr><td class="text-muted">Name</td><td class="fw-semibold">{{ $resolvedEmployee->name }}</td></tr>
+                    <tr><td class="text-muted">Code</td><td>{{ $resolvedEmployee->employee_code ?? '—' }}</td></tr>
+                    <tr><td class="text-muted">Designation</td><td>{{ $resolvedEmployee->designation ?? '—' }}</td></tr>
+                    <tr><td class="text-muted">Phone</td><td>{{ $resolvedEmployee->phone ?? '—' }}</td></tr>
                 </table>
+                @if(! $mdm->local_employee_id)
+                <div class="text-muted mt-2" style="font-size:.72rem"><i class="bi bi-link-45deg me-1"></i>Matched via Serial No. / IMEI</div>
+                @endif
                 @else
                 <div class="text-muted fst-italic">Not linked to an employee.</div>
                 @endif

@@ -67,6 +67,40 @@ class MdmDevice extends Model
         return $this->belongsTo(Employee::class, 'local_employee_id');
     }
 
+    /**
+     * Resolve the asset-tracking Device for this MDM record, falling back to a
+     * live IMEI/serial lookup when local_device_id hasn't been backfilled yet.
+     */
+    public function matchedDevice(): ?Device
+    {
+        if ($this->local_device_id) {
+            return $this->localDevice;
+        }
+
+        $device = null;
+        if ($this->imei) {
+            $device = Device::where('imei1', $this->imei)->orWhere('imei2', $this->imei)->first();
+        }
+        if (! $device && $this->serial_number) {
+            $device = Device::where('serial_number', $this->serial_number)->first();
+        }
+
+        return $device;
+    }
+
+    /**
+     * Resolve the employee for this MDM record via local_employee_id, falling back
+     * to the employee currently assigned to the IMEI/serial-matched device.
+     */
+    public function resolvedEmployee(): ?Employee
+    {
+        if ($this->local_employee_id) {
+            return $this->localEmployee;
+        }
+
+        return $this->matchedDevice()?->currentEmployee;
+    }
+
     // Backward-compatible aliases so existing views work without changes
     public function employee(): BelongsTo
     {
