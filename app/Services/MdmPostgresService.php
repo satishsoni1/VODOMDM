@@ -897,8 +897,24 @@ class MdmPostgresService
 
     // ── Device mappers ──────────────────────────────────────────────────────
 
+    /**
+     * The devices table itself has no serial/model/androidVersion columns and imei
+     * is frequently blank — but the infojson blob (populated by the launcher app)
+     * carries these fields nested. Decode it so mapDevice() can fall back to it.
+     */
+    private function decodeInfoJson(array $d): ?array
+    {
+        $raw = $d['infojson'] ?? $d['info_json'] ?? null;
+        if (empty($raw)) return null;
+        if (is_array($raw)) return $raw;
+        $decoded = json_decode((string) $raw, true);
+        return is_array($decoded) ? $decoded : null;
+    }
+
     private function mapDevice(array $d, array $groups, array $configs): array
     {
+        $info = $this->decodeInfoJson($d);
+
         $status = 'unknown';
         $sc     = $this->col($d, ['statuscode', 'status_code', 'online', 'status']);
         if ($sc !== null) {
@@ -917,10 +933,19 @@ class MdmPostgresService
         $perm     = $this->col($d, ['permissions_status', 'permissionsstatus', 'permissionstatus', 'permissions']);
         $number   = (string) $this->col($d, ['number', 'device_number', 'mdm_number', 'id'], '');
 
+        $imei = $this->col($d, ['imei']) ?: ($info['imei'] ?? null);
+        $serial = $this->col($d, ['serial', 'serial_number', 'serialnumber']) ?: ($info['serial'] ?? null);
+        $model = $this->col($d, ['model']) ?: ($info['model'] ?? null);
+        $androidVersion = $this->col($d, ['android_version', 'androidversion', 'androidver']) ?: ($info['androidVersion'] ?? null);
+        $mdmMode = $this->col($d, ['mdmmode', 'mdm_mode']);
+        if ($mdmMode === null) $mdmMode = $info['mdmMode'] ?? null;
+        $kioskMode = $this->col($d, ['kioskmode', 'kiosk_mode']);
+        if ($kioskMode === null) $kioskMode = $info['kioskMode'] ?? null;
+
         return [
             'mdm_number'          => $number,
-            'imei'                => $this->col($d, ['imei'])                                               ?? null,
-            'serial_number'       => $this->col($d, ['serial', 'serial_number', 'serialnumber'])           ?? null,
+            'imei'                => $imei ?: null,
+            'serial_number'       => $serial ?: null,
             'phone'               => $this->col($d, ['phone', 'phone_number'])                             ?? null,
             'description'         => $this->col($d, ['description'])                                       ?? null,
             'mdm_group'           => $groupId  ? ($groups[(int) $groupId]   ?? null) : null,
@@ -930,14 +955,14 @@ class MdmPostgresService
             'permission_status'   => is_string($perm) ? $perm : null,
             'installation_status' => null,
             'sync_time'           => $this->parseTs($this->col($d, ['lastupdate', 'last_update', 'sync_time', 'updated_at'])),
-            'model'               => $this->col($d, ['model'])                                             ?? null,
+            'model'               => $model ?: null,
             'default_launcher'    => $this->col($d, ['launcher', 'default_launcher', 'defaultlauncher'])   ?? null,
             'ip_address'          => $this->col($d, ['ipaddress', 'ip_address', 'ip'])                     ?? null,
             'public_ip'           => $this->col($d, ['publicip', 'public_ip', 'publicipaddress'])          ?? null,
-            'mdm_mode'            => (bool) ($this->col($d, ['mdmmode', 'mdm_mode'])    ?? false),
-            'kiosk_mode'          => (bool) ($this->col($d, ['kioskmode', 'kiosk_mode']) ?? false),
+            'mdm_mode'            => (bool) ($mdmMode   ?? false),
+            'kiosk_mode'          => (bool) ($kioskMode ?? false),
             'enrollment_date'     => $this->parseTs($this->col($d, ['enrollment_date', 'enrollmentdate', 'enrolled_at', 'createdate', 'created_at'])),
-            'android_version'     => (string) ($this->col($d, ['android_version', 'androidversion', 'androidver']) ?? ''),
+            'android_version'     => (string) ($androidVersion ?? ''),
             'latitude'            => $this->col($d, ['latitude', 'lat'])                                   ?? null,
             'longitude'           => $this->col($d, ['longitude', 'lon', 'lng'])                           ?? null,
             'division'            => $this->col($d, ['division'])                                          ?? null,

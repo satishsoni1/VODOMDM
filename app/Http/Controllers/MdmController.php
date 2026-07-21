@@ -94,7 +94,10 @@ class MdmController extends Controller
                 : redirect()->route('mdm.sync')->with('warning', 'Sync is already running. Check progress below.');
         }
 
-        Cache::put('mdm_sync_running', true, 3600);
+        // Note: the actual lock is acquired atomically inside MdmSyncCommand::handle()
+        // (via Cache::add) so it also guards against a directly-invoked `php artisan
+        // mdm:sync` colliding with this web-triggered run. This check is just a fast
+        // pre-flight UX rejection.
         Cache::put('mdm_sync_progress', [
             'status'     => 'starting',
             'started_at' => now()->timestamp,

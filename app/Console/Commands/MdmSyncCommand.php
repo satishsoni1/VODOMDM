@@ -16,6 +16,16 @@ class MdmSyncCommand extends Command
 
     public function handle(): int
     {
+        // Atomic lock: only sets the key if it isn't already present, so a directly
+        // invoked `php artisan mdm:sync` can never run concurrently with another
+        // invocation (web-triggered or another CLI call) — overlapping runs were
+        // corrupting mdm_devices (stale pg_number rows deleted mid-run while another
+        // run's location sync still referenced the old id, causing FK violations).
+        if (! Cache::add('mdm_sync_running', true, 3600)) {
+            $this->warn('MDM sync already running — skipping this invocation.');
+            return Command::SUCCESS;
+        }
+
         $userId = (int) $this->option('user');
 
         $this->progress = [
