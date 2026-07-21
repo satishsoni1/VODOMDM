@@ -138,13 +138,14 @@ class MdmController extends Controller
     }
 
     // ── Device List ───────────────────────────────────────────────────────────
-    public function devices(Request $request)
+    private function filteredDevicesQuery(Request $request)
     {
         $q = MdmDevice::with(['employee.client', 'device', 'hardware', 'locationLatest']);
 
-        if ($request->filled('status'))  $q->where('device_status', $request->status);
-        if ($request->filled('group'))   $q->where('mdm_group', $request->group);
-        if ($request->filled('model'))   $q->where('model', $request->model);
+        if ($request->filled('status'))        $q->where('device_status', $request->status);
+        if ($request->filled('group'))          $q->where('mdm_group', $request->group);
+        if ($request->filled('model'))          $q->where('model', $request->model);
+        if ($request->filled('configuration'))  $q->where('configuration', $request->configuration);
         if ($request->filled('linked')) {
             $request->linked === 'yes'
                 ? $q->whereNotNull('local_employee_id')
@@ -166,9 +167,15 @@ class MdmController extends Controller
             });
         }
 
-        $devices   = $q->orderByDesc('sync_time')->paginate(30)->withQueryString();
+        return $q;
+    }
+
+    public function devices(Request $request)
+    {
+        $devices   = $this->filteredDevicesQuery($request)->orderByDesc('sync_time')->paginate(30)->withQueryString();
         $groups    = MdmDevice::whereNotNull('mdm_group')->distinct()->orderBy('mdm_group')->pluck('mdm_group');
         $modelList = MdmDevice::whereNotNull('model')->where('model', '!=', '')->distinct()->orderBy('model')->pluck('model');
+        $configs   = MdmDevice::whereNotNull('configuration')->where('configuration', '!=', '')->distinct()->orderBy('configuration')->pluck('configuration');
 
         $stats = [
             'total'   => MdmDevice::count(),
@@ -178,7 +185,17 @@ class MdmController extends Controller
             'gps'     => MdmDevice::whereNotNull('latitude')->count(),
         ];
 
-        return view('mdm.devices', compact('devices', 'groups', 'modelList', 'stats'));
+        return view('mdm.devices', compact('devices', 'groups', 'modelList', 'configs', 'stats'));
+    }
+
+    public function exportDevices(Request $request)
+    {
+        $query = $this->filteredDevicesQuery($request)->orderByDesc('sync_time');
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\MdmDevicesExport($query),
+            'mdm-devices-' . now()->format('Ymd_His') . '.xlsx'
+        );
     }
 
     // ── Device Detail ─────────────────────────────────────────────────────────

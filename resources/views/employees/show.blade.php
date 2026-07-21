@@ -10,7 +10,7 @@
     <h5 class="fw-bold mb-0">
         <i class="bi bi-person me-2"></i>{{ $employee->name }}
         <span class="badge bg-secondary ms-2">{{ $employee->employee_code }}</span>
-        @if($employee->username)<span class="badge bg-light text-dark border ms-1 fw-normal">@{{ $employee->username }}</span>@endif
+        @if($employee->username)<span class="badge bg-light text-dark border ms-1 fw-normal">{{ $employee->username }}</span>@endif
         <span class="badge bg-{{ match($employee->status){ 'active'=>'success','resigned'=>'warning text-dark','terminated'=>'danger','on_leave'=>'info text-dark',default=>'secondary' } }} ms-1">
             {{ ucwords(str_replace('_',' ',$employee->status)) }}
         </span>

@@ -59,6 +59,7 @@ Route::middleware(['auth', 'client'])->prefix('client-portal')->name('client.')-
 
     Route::get('/mdm-map',              [ClientPortalController::class, 'mdmMap'])->name('mdm-map');
     Route::get('/mdm-devices',          [ClientPortalController::class, 'mdmDevices'])->name('mdm-devices');
+    Route::get('/mdm-devices/export',   [ClientPortalController::class, 'exportMdmDevices'])->name('mdm-devices.export');
     Route::get('/mdm-devices/{mdm}',    [ClientPortalController::class, 'mdmShow'])->name('mdm-devices.show');
 });
 
@@ -259,6 +260,7 @@ Route::middleware(['auth', 'verified', 'redirect.client'])->group(function () {
         Route::get('/sync/progress',   [MdmController::class, 'syncProgress'])->name('sync.progress');
         Route::post('/sync/automatch', [MdmController::class, 'autoMatch'])->name('sync.automatch');
         Route::get('/devices',         [MdmController::class, 'devices'])->name('devices');
+        Route::get('/devices/export',  [MdmController::class, 'exportDevices'])->name('devices.export');
         Route::get('/devices/{mdm}',   [MdmController::class, 'show'])->name('show');
         Route::get('/link',            [MdmController::class, 'link'])->name('link');
         Route::post('/link/{mdm}',     [MdmController::class, 'saveLink'])->name('link.save');

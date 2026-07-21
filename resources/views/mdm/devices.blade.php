@@ -73,6 +73,14 @@
                     @endforeach
                 </select>
             </div>
+            <div class="col-md-2">
+                <select name="configuration" class="form-select form-select-sm">
+                    <option value="">All Configurations</option>
+                    @foreach($configs as $c)
+                    <option value="{{ $c }}" {{ request('configuration')===$c ? 'selected':'' }}>{{ $c }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div class="col-md-1">
                 <select name="linked" class="form-select form-select-sm">
                     <option value="">All</option>
@@ -110,6 +118,9 @@
             @endif
         </div>
         <div class="d-flex gap-2">
+            <a href="{{ route('mdm.devices.export', request()->query()) }}" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-file-earmark-excel me-1"></i>Export
+            </a>
             <a href="{{ route('mdm.map') }}" class="btn btn-sm btn-outline-success">
                 <i class="bi bi-geo-alt-fill me-1"></i>Map View
             </a>
@@ -202,7 +213,7 @@
                     <td colspan="10" class="text-center py-5 text-muted">
                         <i class="bi bi-phone-fill fs-2 d-block mb-2 opacity-20"></i>
                         No devices found.
-                        @if(request()->hasAny(['q','status','group','model','linked','gps']))
+                        @if(request()->hasAny(['q','status','group','model','configuration','linked','gps']))
                             <a href="{{ route('mdm.devices') }}">Clear filters</a>
                         @else
                             <a href="{{ route('mdm.sync') }}">Run a sync</a> to import devices.

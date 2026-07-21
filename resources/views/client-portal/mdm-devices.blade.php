@@ -18,19 +18,19 @@
 <div class="card border-0 shadow-sm mb-3">
     <div class="card-body py-2">
         <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <input type="text" name="q" class="form-control form-control-sm"
                        placeholder="Search device #, IMEI, serial, model…"
                        value="{{ request('q') }}">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <select name="status" class="form-select form-select-sm">
                     <option value="">All Statuses</option>
                     <option value="on"  {{ request('status')=='on'  ? 'selected':'' }}>Online</option>
                     <option value="off" {{ request('status')=='off' ? 'selected':'' }}>Offline</option>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <select name="group" class="form-select form-select-sm">
                     <option value="">All Groups</option>
                     @foreach($groups as $g)
@@ -38,11 +38,41 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2 d-flex gap-1">
+            <div class="col-md-2">
+                <select name="model" class="form-select form-select-sm">
+                    <option value="">All Models</option>
+                    @foreach($modelList as $m)
+                    <option value="{{ $m }}" {{ request('model')===$m ? 'selected':'' }}>{{ $m }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="configuration" class="form-select form-select-sm">
+                    <option value="">All Configurations</option>
+                    @foreach($configs as $c)
+                    <option value="{{ $c }}" {{ request('configuration')===$c ? 'selected':'' }}>{{ $c }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-1">
+                <select name="linked" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    <option value="yes" {{ request('linked')==='yes' ? 'selected':'' }}>Linked</option>
+                    <option value="no"  {{ request('linked')==='no'  ? 'selected':'' }}>Unlinked</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <select name="gps" class="form-select form-select-sm">
+                    <option value="">Any GPS</option>
+                    <option value="yes" {{ request('gps')==='yes' ? 'selected':'' }}>Has GPS</option>
+                    <option value="no"  {{ request('gps')==='no'  ? 'selected':'' }}>No GPS</option>
+                </select>
+            </div>
+            <div class="col-md-1 d-flex gap-1">
                 <button type="submit" class="btn btn-sm text-white flex-grow-1" style="background:var(--gs-teal)">
-                    <i class="bi bi-search me-1"></i>Filter
+                    <i class="bi bi-search"></i>
                 </button>
-                @if(request()->hasAny(['q','status','group']))
+                @if(request()->hasAny(['q','status','group','model','configuration','linked','gps']))
                 <a href="{{ route('client.mdm-devices') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x"></i></a>
                 @endif
             </div>
@@ -54,9 +84,14 @@
 <div class="card border-0 shadow-sm">
     <div class="card-header d-flex align-items-center justify-content-between" style="background:var(--gs-teal-light);border-bottom:1px solid #b2d8d4">
         <strong style="color:var(--gs-teal-dark)"><i class="bi bi-phone-fill me-2"></i>Devices ({{ $devices->total() }})</strong>
-        <a href="{{ route('client.mdm-map') }}" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-geo-alt-fill me-1"></i>Map View
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('client.mdm-devices.export', request()->query()) }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-file-earmark-excel me-1"></i>Export
+            </a>
+            <a href="{{ route('client.mdm-map') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-geo-alt-fill me-1"></i>Map View
+            </a>
+        </div>
     </div>
     <div class="card-body p-0">
         @if($devices->isEmpty())

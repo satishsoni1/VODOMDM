@@ -267,15 +267,25 @@ class ClientPortalController extends Controller
     }
 
     // ── MDM Device List (scoped to assigned configurations) ─────────────────────
-    public function mdmDevices(Request $request)
+    private function filteredMdmDevicesQuery(Request $request, array $configs)
     {
-        $configs = $this->assignedConfigurations();
-
         $q = MdmDevice::with(['employee', 'hardware', 'locationLatest'])
             ->whereIn('configuration', $configs);
 
-        if ($request->filled('status')) $q->where('device_status', $request->status);
-        if ($request->filled('group'))  $q->where('mdm_group', $request->group);
+        if ($request->filled('status'))        $q->where('device_status', $request->status);
+        if ($request->filled('group'))          $q->where('mdm_group', $request->group);
+        if ($request->filled('model'))          $q->where('model', $request->model);
+        if ($request->filled('configuration'))  $q->where('configuration', $request->configuration);
+        if ($request->filled('linked')) {
+            $request->linked === 'yes'
+                ? $q->whereNotNull('local_employee_id')
+                : $q->whereNull('local_employee_id');
+        }
+        if ($request->filled('gps')) {
+            $request->gps === 'yes'
+                ? $q->whereNotNull('latitude')
+                : $q->whereNull('latitude');
+        }
         if ($request->filled('q')) {
             $search = $request->q;
             $q->where(function ($sub) use ($search) {
@@ -286,11 +296,31 @@ class ClientPortalController extends Controller
             });
         }
 
-        $devices = $q->orderByDesc('sync_time')->paginate(20)->withQueryString();
-        $groups  = MdmDevice::whereIn('configuration', $configs)
-            ->whereNotNull('mdm_group')->distinct()->orderBy('mdm_group')->pluck('mdm_group');
+        return $q;
+    }
 
-        return view('client-portal.mdm-devices', compact('devices', 'groups', 'configs'));
+    public function mdmDevices(Request $request)
+    {
+        $configs = $this->assignedConfigurations();
+
+        $devices   = $this->filteredMdmDevicesQuery($request, $configs)->orderByDesc('sync_time')->paginate(20)->withQueryString();
+        $groups    = MdmDevice::whereIn('configuration', $configs)
+            ->whereNotNull('mdm_group')->distinct()->orderBy('mdm_group')->pluck('mdm_group');
+        $modelList = MdmDevice::whereIn('configuration', $configs)
+            ->whereNotNull('model')->where('model', '!=', '')->distinct()->orderBy('model')->pluck('model');
+
+        return view('client-portal.mdm-devices', compact('devices', 'groups', 'modelList', 'configs'));
+    }
+
+    public function exportMdmDevices(Request $request)
+    {
+        $configs = $this->assignedConfigurations();
+        $query   = $this->filteredMdmDevicesQuery($request, $configs)->orderByDesc('sync_time');
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\MdmDevicesExport($query, useResolvedEmployee: true),
+            'mdm-devices-' . now()->format('Ymd_His') . '.xlsx'
+        );
     }
 
     // ── MDM Device Detail (scoped to assigned configurations) ───────────────────
